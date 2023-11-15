@@ -76,19 +76,19 @@ s.waitForBoot({
 3+(rrand(0,300000)/100000)
 x.clear;
 (
-	Routine {
-		0.5.wait;
-		x.record(5);
-		0.4.wait;
-		x.record(6);
-		0.6.wait;
-		x.record(7);
-		0.6.wait;
-		x.record(8);
-		0.7.wait;
-		x.record(9);
-		"done".postln;
-	}.play;
+Routine {
+	0.5.wait;
+	x.record(5);
+	0.4.wait;
+	x.record(6);
+	0.6.wait;
+	x.record(7);
+	0.6.wait;
+	x.record(8);
+	0.7.wait;
+	x.record(9);
+	"done".postln;
+}.play;
 )
 
 x.patterns

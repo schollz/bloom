@@ -70,7 +70,7 @@ BloomPattern {
 					if (fnFinish.notNil,{
 						fnFinish.(time);
 					});
-				});			
+				});
 				timeLast = time;
 			});
 		});

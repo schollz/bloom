@@ -110,14 +110,14 @@ BloomWildly {
 				bus: buses.at("mod"++i),
 				freq: 1/(3+(rrand(0,300000)/100000)),
 			]));
-		});		
+		});
 
 		// starts the pattern recorderplayer
 		bloomRecorder.run({
 			arg pattern, v, age;
 			("[BloomWildly] emit"+v+"age"+age+"pattern"+pattern).postln;
 			// TODO
-			// emit a note based on current sample with 
+			// emit a note based on current sample with
 			// amplitidue defined by the age of the pattern
 			// TODO create a parameter for the pattern age limit
 			// if (age>50,{
@@ -129,8 +129,8 @@ BloomWildly {
 		if (timer.notNil,{
 			timer.stop;
 		});
-		timer = { inf.do({ 
-			delta.wait; 
+		timer = { inf.do({
+			delta.wait;
 			tick = tick + 1;
 			if (tickBetweenChords>0,{
 				tickBetweenChords = tickBetweenChords - 1;
@@ -151,11 +151,11 @@ BloomWildly {
 						// 	freq: (chord[i]+noteRoot).midicps,
 						// ]));
 						// NodeWatcher.register(syns.add("pad"++i));
-					});		
+					});
 
 				}
 			});
-		})}.fork;		
+		})}.fork;
 
 		"[BloomWildly] ready".postln;
 	}

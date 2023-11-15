@@ -1,3 +1,11 @@
+// before runningmake sure to
+// start grid osc utility by running
+//
+// serialoscd
+//
+// or similar.
+// see TODO for more information
+
 (
 Server.default = Server.local;
 

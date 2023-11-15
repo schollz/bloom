@@ -44,9 +44,9 @@ BloomRecord {
 		if (timer.notNil,{
 			timer.stop;
 		});
-		timer = { inf.do({ 
-			delta.wait; 
-			tick = tick + 1; 
+		timer = { inf.do({
+			delta.wait;
+			tick = tick + 1;
 			if (ticksBetweenRecordings>0,{
 				ticksBetweenRecordings = ticksBetweenRecordings - 1;
 				if (ticksBetweenRecordings==0,{
@@ -62,8 +62,8 @@ BloomRecord {
 				if (patternHistory[patternCurrent].notNil,{
 					patternHistory[patternCurrent].emit(tick,
 						{ arg v, age; fnEmit.(patternCurrent, v, age); },
-						{ arg v; 
-							("[BloomRecord] finished playing pattern "+patternCurrent).postln; 
+						{ arg v;
+							("[BloomRecord] finished playing pattern "+patternCurrent).postln;
 							isPlaying = false;
 							tickBetweenPatterns = ticksBetweenPatterns;
 						}
@@ -77,7 +77,7 @@ BloomRecord {
 						if (patterns.size>0,{
 							patternIterator = patternIterator + 1;
 							patternCurrent = patterns[patternIterator.mod(patterns.size)];
-							("[BloomRecord] playing pattern "+patternCurrent).postln; 
+							("[BloomRecord] playing pattern "+patternCurrent).postln;
 							patternHistory[patternCurrent].play(tick);
 							isPlaying = true;
 						},{
@@ -101,7 +101,7 @@ BloomRecord {
 	remove {
 		arg pattern;
 		if (pattern==patternCurrent,{
-			("[BloomRecord] finished playing pattern "+patternCurrent).postln; 
+			("[BloomRecord] finished playing pattern "+patternCurrent).postln;
 			isPlaying = false;
 			tickBetweenPatterns = ticksBetweenPatterns;
 		});
