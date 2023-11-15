@@ -1,4 +1,58 @@
+(
+s.waitForBoot({
+	x = BloomWildly(Server.default);
+	Routine {
+		0.1.wait;
+		x.record(0);
+		0.2.wait;
+		x.record(1);
+		0.3.wait;
+		x.record(2);
+		0.4.wait;
+		x.record(3);
+		0.5.wait;
+		x.record(4);
+		"done".postln;
+		3.wait;
+		0.5.wait;
+		x.record(5);
+		0.4.wait;
+		x.record(6);
+		0.6.wait;
+		x.record(7);
+		0.6.wait;
+		x.record(8);
+		0.7.wait;
+		x.record(9);
+		"done".postln;
+		3.wait;
+		// x.remove(0);
+	}.play;
 
+})
+)
+
+x.remove(3);
+
+
+
+
+10.mod(3)
+x = Dictionary.new();
+x.put(0,0);
+x.put(1,0);
+x.put(4,0);
+x.remove(0)
+delete(x,0)
+x.put(0,nil);
+x
+x.keys().asArray.sort
+List()
+
+x = [1,2,3]
+x.removeAt(1)
+x
+x.indexOf(1)
 (
 s.waitForBoot({
 	x = BloomRecord(Server.default);
@@ -19,6 +73,7 @@ s.waitForBoot({
 });
 )
 
+3+(rrand(0,300000)/100000)
 x.clear;
 (
 	Routine {

@@ -237,4 +237,10 @@ BloomSample {
 
 		this.playSample(id, folder, note, velocity, attack);
 	}
+
+	free {
+		syns.keysValuesDo({ arg name, val;
+			val.free;
+		});
+	}
 }
