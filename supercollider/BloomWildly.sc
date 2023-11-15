@@ -116,6 +116,9 @@ BloomWildly {
 		bloomRecorder.run({
 			arg pattern, v, age;
 			("[BloomWildly] emit"+v+"age"+age+"pattern"+pattern).postln;
+			// TODO
+			// emit a note based on current sample with 
+			// amplitidue defined by the age of the pattern
 			// TODO create a parameter for the pattern age limit
 			// if (age>50,{
 			// 	bloomRecorder.remove(pattern);
@@ -138,8 +141,8 @@ BloomWildly {
 					chordNum = chordNum + 1;
 					chord = chords[chordNum.mod(chords.size)];
 					3.do({ arg i ;
+						("[BloomWildly] playing chord"+chord).postln;
 						// stop old pad
-						// ("[BloomWildly] playing chord"+chord).postln;
 						// if (syns.at("pad"++i).notNil,{
 						// 	syns.at("pad"++i).set(\gate,0);
 						// });
