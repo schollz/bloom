@@ -26,7 +26,7 @@ s.waitForBoot({
 		x.record(9);
 		"done".postln;
 		3.wait;
-		// x.remove(0);
+		x.remove(2);
 	}.play;
 
 })

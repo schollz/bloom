@@ -2,8 +2,8 @@ BloomPattern {
 	var <arrTime;
 	var <arrValue;
 	var <itPlay;
-	var <timePlay;
 	var <isPlaying;
+	var <isRecording;
 	var <timePlaying;
 	var <timeLast;
 
@@ -15,30 +15,34 @@ BloomPattern {
 		arrTime = Array.new();
 		arrValue = Array.new();
 		isPlaying = false;
+		isRecording = false;
 	}
 
 	record {
 		arg time, value;
-		// time is absolute time
-		arrTime = arrTime.add(time);
+		if (isRecording,{
+		},{
+			// not recording
+			isRecording = true;
+			timeLast = time;
+		});
+		arrTime = arrTime.add(time-timeLast);
 		arrValue = arrValue.add(value);
 		timePlaying = 0;
 		isPlaying = false;
+		isRecording = true;
 		itPlay = 0;
+		timeLast = time;
 		("[BloomPattern] recorded"+value+"at"+time).postln;
 	}
 
 	finish {
-		var arr0 = arrTime[0];
-		arrTime.do({ arg v, i;
-			arrTime[i] = v - arr0;
-		});
+		isRecording = false;
 	}
 
 	play {
 		arg time;
 		if (arrTime.size>0,{
-			timePlay = time;
 			timeLast = time;
 			itPlay = 0;
 			isPlaying = true;
@@ -48,13 +52,16 @@ BloomPattern {
 	emit {
 		arg time, fnEmit, fnFinish;
 		if (isPlaying,{
-			timePlaying = timePlaying + (time-timeLast);
-			timeLast = time;
-			if ((time-timePlay)>arrTime[itPlay],{
+			if ((time-timeLast)>arrTime[itPlay],{
+				// record ght time playing
+				timePlaying = timePlaying + (time-timeLast);
 				// play
 				if (fnEmit.notNil,{
 					fnEmit.(arrValue[itPlay],timePlaying);
 				});
+				// TODO: randomly modulate the delta
+				// arrTime[itPlay] = arrTime[itPlay] + (rrand(-1000,1000)/1000);
+
 				// iterate
 				itPlay = itPlay + 1;
 				// check if finished
@@ -63,7 +70,8 @@ BloomPattern {
 					if (fnFinish.notNil,{
 						fnFinish.(time);
 					});
-				});				
+				});			
+				timeLast = time;
 			});
 		});
 	}
