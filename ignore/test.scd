@@ -2,37 +2,35 @@
 s.waitForBoot({
 	x = BloomWildly(Server.default);
 	Routine {
-		0.1.wait;
+		1.wait;
 		x.record(0);
-		0.2.wait;
+		1.2.wait;
 		x.record(1);
-		0.3.wait;
-		x.record(2);
-		0.4.wait;
-		x.record(3);
-		0.5.wait;
+		1.3.wait;
 		x.record(4);
-		"done".postln;
-		3.wait;
-		0.5.wait;
-		x.record(5);
-		0.4.wait;
+		1.6.wait;
 		x.record(6);
+		1.5.wait;
+		x.record(5);
+		"done".postln;
+		6.wait;
+		0.5.wait;
+		x.record(9);
+		2.4.wait;
+		x.record(11);
+		1.6.wait;
+		x.record(10);
 		0.6.wait;
-		x.record(7);
-		0.6.wait;
-		x.record(8);
-		0.7.wait;
+		x.record(9);
+		0.3.wait;
 		x.record(9);
 		"done".postln;
 		3.wait;
-		x.remove(2);
 	}.play;
 
 })
 )
 
-x.remove(3);
 
 
 

@@ -22,7 +22,7 @@ BloomRecord {
 	clear {
 		patternCurrent = 0;
 		isPlaying = false;
-		ticksBetweenPatterns = 1 / delta;
+		ticksBetweenPatterns = 3 / delta;
 		tickBetweenPatterns = ticksBetweenPatterns;
 		ticksBetweenRecordings = 0;
 		patternRemoveQueue = Array.new();
@@ -51,6 +51,7 @@ BloomRecord {
 				ticksBetweenRecordings = ticksBetweenRecordings - 1;
 				if (ticksBetweenRecordings==0,{
 					// stop recording
+					tickBetweenPatterns = ticksBetweenPatterns;
 					patternHistoryIterator = patternHistoryIterator + 1;
 					("[BloomRecord] stop recording pattern"+patternHistoryIterator).postln;
 					patternRecording.finish();
@@ -92,7 +93,7 @@ BloomRecord {
 	record {
 		arg v;
 		if (ticksBetweenRecordings==0,{
-			ticksBetweenRecordings = 3 / delta;
+			ticksBetweenRecordings = 6 / delta;
 			patternRecording = BloomPattern();
 		});
 		patternRecording.record(tick, v);
