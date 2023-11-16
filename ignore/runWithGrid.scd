@@ -86,7 +86,6 @@ s.waitForBoot({
 		draw.value();
 	},"/emit",nil,10111);
 
-
 });
 
 )
