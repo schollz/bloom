@@ -36,12 +36,17 @@ s.waitForBoot({
 
 	~m.key({ arg x,y,z;
 		var pos = x + (y * 16);
-		var idx = 15 - x;
+		var idx = 15-x;
+		var recorder = 0;
+		if (y>3,{
+			recorder = 1;
+		});
 		[x,y].postln;
 		~press[pos]=z;
 		if (z>0,{
 			~step[pos] = z*15;
-			~bloom.record(idx);
+			~bloom.record(recorder,[idx,x,y]);
+			draw.value();
 		},{
 		});
 	});
@@ -61,12 +66,25 @@ s.waitForBoot({
 	};
 
 	timer = Routine({
-		var interval = 0.125;
+		var interval = 0.25;
 		loop {
 			draw.value;
 			interval.yield;
 		}
 	});
+	timer.play();
+
+	OSCFunc({  arg msg, time, addr, recvPort;
+		var x = msg[2];
+		var y = msg[3];
+		var pos = x + (y * 16);
+		var age = msg[4];
+		age.postln;
+		// [msg, time, addr, recvPort].postln;
+		// [x,y,pos].postln;
+		~step[pos]=age.linlin(0,120,15,1).round;
+		draw.value();
+	},"/emit",nil,10111);
 
 
 });

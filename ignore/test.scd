@@ -1,37 +1,27 @@
 (
 s.waitForBoot({
 	x = BloomWildly(Server.default);
+	OSCFunc({  arg msg, time, addr, recvPort;
+		[msg, time, addr, recvPort].postln;
+	},"/emit",nil,10111);
 	Routine {
 		1.wait;
-		x.record(0);
-		1.2.wait;
-		x.record(1);
-		1.3.wait;
-		x.record(4);
-		1.6.wait;
-		x.record(6);
-		1.5.wait;
-		x.record(5);
-		"done".postln;
-		6.wait;
-		0.5.wait;
-		x.record(9);
-		2.4.wait;
-		x.record(11);
-		1.6.wait;
-		x.record(10);
-		0.6.wait;
-		x.record(9);
-		0.3.wait;
-		x.record(9);
-		"done".postln;
+		x.record(0,[0,7,13]);
 		3.wait;
 	}.play;
-
 })
 )
 
+thisProcess.openUDPPort(7771);
+n = NetAddr.new("127.0.0.1", 10111);    // create the NetAddr
+// create the OSCFunc
+o = OSCFunc.new({ arg msg, time, addr, recvPort; [msg, time, addr, recvPort].postln; }, '/goodbye', nil,7771);
 
+n.sendMsg("/emit",[1,2],);
+thisProcess.openPorts;
+OSCFunc.trace(false);
+o.free;    // remove the OSCFunc when you are done.
+Date.getDate.rawSeconds
 
 
 

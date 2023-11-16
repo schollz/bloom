@@ -13,16 +13,17 @@ BloomRecord {
 	var patternRemoveQueue;
 	var patternHistory;
 	var patternHistoryIterator;
+	var fnEmit;
 
 	*new {
-		arg argServer;
-		^super.new.init(argServer);
+		arg argServer, argFnEmit;
+		^super.new.init(argServer, argFnEmit);
 	}
 
 	clear {
 		patternCurrent = 0;
 		isPlaying = false;
-		ticksBetweenPatterns = 3 / delta;
+		ticksBetweenPatterns = 4 / delta;
 		tickBetweenPatterns = ticksBetweenPatterns;
 		ticksBetweenRecordings = 0;
 		patternRemoveQueue = Array.new();
@@ -32,15 +33,15 @@ BloomRecord {
 	}
 
 	init {
-		arg argServer;
+		arg argServer, argFnEmit;
 		server = argServer;
+		fnEmit = argFnEmit;
 		delta = 0.1;
 		tick = 0;
 		this.clear();
 	}
 
 	run {
-		arg fnEmit;
 		if (timer.notNil,{
 			timer.stop;
 		});
@@ -51,7 +52,7 @@ BloomRecord {
 				ticksBetweenRecordings = ticksBetweenRecordings - 1;
 				if (ticksBetweenRecordings==0,{
 					// stop recording
-					tickBetweenPatterns = ticksBetweenPatterns;
+					tickBetweenPatterns = ticksBetweenPatterns + rrand(0,10);
 					patternHistoryIterator = patternHistoryIterator + 1;
 					("[BloomRecord] stop recording pattern"+patternHistoryIterator).postln;
 					patternRecording.finish();
@@ -66,7 +67,7 @@ BloomRecord {
 						{ arg v;
 							("[BloomRecord] finished playing pattern "+patternCurrent).postln;
 							isPlaying = false;
-							tickBetweenPatterns = ticksBetweenPatterns;
+							tickBetweenPatterns = ticksBetweenPatterns + rrand(0,10);
 						}
 					);
 				});
@@ -82,7 +83,7 @@ BloomRecord {
 							patternHistory[patternCurrent].play(tick);
 							isPlaying = true;
 						},{
-							tickBetweenPatterns = ticksBetweenPatterns;
+							tickBetweenPatterns = ticksBetweenPatterns + rrand(0,10);
 						});
 					});
 				});
@@ -96,7 +97,7 @@ BloomRecord {
 			ticksBetweenRecordings = 6 / delta;
 			patternRecording = BloomPattern();
 		});
-		patternRecording.record(tick, v);
+		patternRecording.record(tick, v, { arg v, age; fnEmit.(patternCurrent, v, age); },);
 	}
 
 	remove {

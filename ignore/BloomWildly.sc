@@ -3,7 +3,8 @@ BloomWildly {
 	var syns;
 	var buses;
 	var bloomSample;
-	var bloomRecorder;
+	var bloomRecorders;
+	var numRecorders;
 	var timer;
 	var delta;
 	var ticksBetweenChords;
@@ -13,10 +14,28 @@ BloomWildly {
 	var noteRoot;
 	var tick;
 	var scale;
+	var patternDeath;
 
 	*new {
 		arg argServer;
 		^super.new.init(argServer);
+	}
+
+	fnEmit {
+		arg recorder, pattern, v, age;
+		var note;
+		note = scale[v[0].mod(16)]+noteRoot;
+		("[BloomWildly] emit"+v+"age"+age+"pattern"+pattern+"note"+note).postln;
+		Synth.head(server,"bell",[\freq,note.midicps,\amp,(age.linlin(0,patternDeath,0,-12).dbamp)]);
+		v = v.add(age);
+		NetAddr("127.0.0.1", 10111).sendMsg("/emit",*v);
+		// TODO
+		// emit a note based on current sample with
+		// amplitidue defined by the age of the pattern
+		// TODO create a parameter for the pattern age limit
+		if (age>patternDeath,{
+			bloomRecorders[recorder].remove(pattern);
+		});
 	}
 
 	init {
@@ -25,10 +44,10 @@ BloomWildly {
 		server = argServer;
 
 		// initialize globals
-		bloomSample = BloomSample(server);
-		bloomRecorder = BloomRecord(server);
+		numRecorders = 2;
+		patternDeath = 60;
 		delta = 0.1;
-		ticksBetweenChords = 4 / delta; // 4 seconds
+		ticksBetweenChords = 12 / delta; // 4 seconds
 		tickBetweenChords = 1;
 		chordNum = 0;
 		chords = [
@@ -40,6 +59,13 @@ BloomWildly {
 		noteRoot = 60;
 		tick = 0;
 		scale = Scale.major.degrees++(12+Scale.major.degrees)++(24+Scale.major.degrees);
+		bloomSample = BloomSample(server);
+		bloomRecorders = Array.newClear(numRecorders);
+		numRecorders.do({ arg i;
+			bloomRecorders[i] = BloomRecord(server, { arg pattern, v, age;
+				this.fnEmit(i, pattern, v, age);
+			});
+		});
 
 		// define synths
 		SynthDef("bass", { arg freq = 440, amp = 0.5, gate = 1;
@@ -84,7 +110,7 @@ BloomWildly {
 			snd = SinOscFB.ar(freq,In.kr(modBus,1).range(0,0.5));
 			snd = snd * EnvGen.ar(Env.adsr(8,1,0.5,4),gate,doneAction:2);
 			DetectSilence.ar(snd,doneAction:2);
-			snd = LPF.ar(snd,200);
+			snd = LPF.ar(snd,400);
 			snd = Pan2.ar(snd,SinOsc.kr(1/Rand(2,5),mul:0.5));
 			Out.ar(0, snd * amp * 12.neg.dbamp);
 		}).send(server);
@@ -133,19 +159,8 @@ BloomWildly {
 		});
 
 		// starts the pattern recorderplayer
-		bloomRecorder.run({
-			arg pattern, v, age;
-			var note;
-			note = scale[v.mod(16)]+noteRoot;
-			("[BloomWildly] emit"+v+"age"+age+"pattern"+pattern+"note"+note).postln;
-			Synth.head(server,"bell",[\freq,note.midicps,\amp,(age.linlin(0,200,0,-24).dbamp)]);
-			// TODO
-			// emit a note based on current sample with
-			// amplitidue defined by the age of the pattern
-			// TODO create a parameter for the pattern age limit
-			// if (age>50,{
-			// 	bloomRecorder.remove(pattern);
-			// });
+		numRecorders.do({ arg i;
+			bloomRecorders[i].run();
 		});
 
 		// starts the pad
@@ -182,7 +197,7 @@ BloomWildly {
 							syns.put("pad"++i,Synth.after(syns.at("mod"++i),"pad",[
 								modBus: buses.at("mod"++i),
 								freq: (chord[i]+noteRoot).midicps,
-								amp: 0.25,
+								amp: 6.neg.dbamp,
 							]));
 							NodeWatcher.register(syns.at("pad"++i));
 						});
@@ -196,15 +211,17 @@ BloomWildly {
 	}
 
 	record {
-		arg v;
+		arg i,v;
 		var note = scale[v.mod(16)]+noteRoot;
 		Synth.head(server,"bell",[\freq,note.midicps,\amp,0.4]);
-		bloomRecorder.record(v);
+		bloomRecorders[i].record(v, { arg pattern, v, age;
+			this.fnEmit(i, pattern, v, age);
+		});
 	}
 
 	remove {
-		arg v;
-		bloomRecorder.remove(v);
+		arg i, v;
+		bloomRecorders[i].remove(v);
 	}
 
 	free {
@@ -216,6 +233,8 @@ BloomWildly {
 		});
 		timer.stop;
 		bloomSample.free;
-		bloomRecorder.free;
+		numRecorders.do({arg i;
+			bloomRecorders[i].free;
+		});
 	}
 }
