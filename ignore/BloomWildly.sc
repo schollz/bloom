@@ -24,9 +24,14 @@ BloomWildly {
 	fnEmit {
 		arg recorder, pattern, v, age;
 		var note;
-		note = scale[v[0].mod(16)]+noteRoot;
+		note = scale[v[0].mod(16)]+noteRoot-12;
 		("[BloomWildly] emit"+v+"age"+age+"pattern"+pattern+"note"+note).postln;
-		Synth.head(server,"bell",[\freq,note.midicps,\amp,(age.linlin(0,patternDeath,0,-12).dbamp)]);
+		if (recorder<1,{
+			bloomSample.noteOn(recorder,"/home/zns/Documents/bloom/samples/rhodes",note,v[2]*12+20.rand,0);
+		},{
+			bloomSample.noteOn(recorder,"/home/zns/Documents/bloom/samples/rhodes",note,v[2]*12+20.rand,0);
+		});
+		// Synth.head(server,"bell",[\freq,note.midicps,\amp,(age.linlin(0,patternDeath,0,-12).dbamp)]);
 		v = v.add(age);
 		NetAddr("127.0.0.1", 10111).sendMsg("/emit",*v);
 		// TODO
@@ -213,7 +218,6 @@ BloomWildly {
 	record {
 		arg i,v;
 		var note = scale[v.mod(16)]+noteRoot;
-		Synth.head(server,"bell",[\freq,note.midicps,\amp,0.4]);
 		bloomRecorders[i].record(v, { arg pattern, v, age;
 			this.fnEmit(i, pattern, v, age);
 		});

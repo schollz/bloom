@@ -60,7 +60,7 @@ BloomSample {
 		allRoundRobins.put(folder,noteRoundRobins);
 
 		SynthDef("playx2",{
-			arg out=0,pan=0,amp=1.0,
+			arg out=0,pan=0,amp=2.0,
 			buf1,buf2,buf1mix=1,
 			t_trig=1,rate=1,
 			attack=0.01,decay=0.1,sustain=1.0,release=6,gate=1,
@@ -79,7 +79,7 @@ BloomSample {
 		}).send(server);
 
 		SynthDef("playx1",{
-			arg out=0,pan=0,amp=1.0,
+			arg out=0,pan=0,amp=2.0,
 			buf1,buf2,buf1mix=1,
 			t_trig=1,rate=1,
 			attack=0.01,decay=0.1,sustain=1.0,release=6,gate=1,
@@ -210,7 +210,7 @@ BloomSample {
 
 		Buffer.read(server,PathName(folder+/+file1).fullPath,action:{ arg b1;
 			Buffer.read(server,PathName(folder+/+file2).fullPath,action:{ arg b2;
-				this.doPlay(id,noteOriginal,amp,b1,b2,buf1mix,rate,attack);
+				this.doPlay(id,noteOriginal,amp*2,b1,b2,buf1mix,rate,attack);
 			});
 		});
 
