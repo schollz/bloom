@@ -24,6 +24,8 @@ o.free;    // remove the OSCFunc when you are done.
 Date.getDate.rawSeconds
 
 
+b = BloomSample.new(Server.default);
+b.noteOn(0,"/home/zns/Documents/bloom/samples/kalimba",60,120,0.01)
 
 10.mod(3)
 x = Dictionary.new();
