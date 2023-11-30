@@ -1,6 +1,6 @@
 (
 s.waitForBoot({
-	f = File("~/Documents/bloom/data/labdanum.txt".standardizePath,"w");
+	f = File("~/Documents/bloom/data/foo.txt".standardizePath,"w");
 	SynthDef("pitch",{
 		var freq,hasFreq;
 		var snd = Mix.new(SoundIn.ar([0,1]));
