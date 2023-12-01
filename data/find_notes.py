@@ -88,7 +88,8 @@ else:
         notes_in_drone = [drone1, drone2]
         notes_in_scale = list(set(notes_in_scale) - set(notes_in_drone))
         notes_in_scale.sort()
-        print(scale)
-        print(f"number of notes: {len(notes_in_scale)}")
-        print(notes_in_drone)
-        print(notes_in_scale)
+        # print(scale)
+        # print(f"number of notes: {len(notes_in_scale)}")
+        # print(notes_in_drone)
+        # print(notes_in_scale)
+        print(f'scales.put("{scale}",{notes_in_drone+notes_in_scale})')

@@ -6,6 +6,7 @@ BloomWildly {
 	var bloomRecorders;
 	var numRecorders;
 	var timer;
+	var timerDrone;
 	var delta;
 	var ticksBetweenChords;
 	var tickBetweenChords;
@@ -15,6 +16,7 @@ BloomWildly {
 	var tick;
 	var scale;
 	var patternDeath;
+	var scales;
 
 	*new {
 		arg argServer;
@@ -26,12 +28,12 @@ BloomWildly {
 		var note;
 		note = scale[v[0].mod(16)]+noteRoot-12;
 		("[BloomWildly] emit"+v+"age"+age+"pattern"+pattern+"note"+note).postln;
-		if (recorder<1,{
-			bloomSample.noteOn(recorder,"/home/zns/Documents/bloom/samples/rhodes",note,v[2]*12+20.rand,0);
-		},{
-			bloomSample.noteOn(recorder,"/home/zns/Documents/bloom/samples/rhodes",note,v[2]*12+20.rand,0);
-		});
-		// Synth.head(server,"bell",[\freq,note.midicps,\amp,(age.linlin(0,patternDeath,0,-12).dbamp)]);
+		// if (recorder<1,{
+		// 	bloomSample.noteOn(recorder,"/home/zns/Documents/bloom/samples/rhodes",note,v[2]*12+20.rand,0);
+		// },{
+		// 	bloomSample.noteOn(recorder,"/home/zns/Documents/bloom/samples/rhodes",note,v[2]*12+20.rand,0);
+		// });
+		Synth.head(server,"bell",[\freq,note.midicps,\amp,(age.linlin(0,patternDeath,0,-12).dbamp)]);
 		v = v.add(age);
 		NetAddr("127.0.0.1", 10111).sendMsg("/emit",*v);
 		// TODO
@@ -61,9 +63,8 @@ BloomWildly {
 			[7.neg,7.neg,3.neg,0],
 			[-3,0,4,9],
 		];
-		noteRoot = 60;
+		noteRoot = 0;
 		tick = 0;
-		scale = Scale.major.degrees++(12+Scale.major.degrees)++(24+Scale.major.degrees);
 		bloomSample = BloomSample(server);
 		bloomRecorders = Array.newClear(numRecorders);
 		numRecorders.do({ arg i;
@@ -138,6 +139,21 @@ BloomWildly {
 			ReplaceOut.ar(0,snd * Lag.kr(\db.kr(0),30).dbamp);
 		}).send(server);
 
+		// initialize scales
+		scales = Dictionary.new();
+		// first two notes of the scale are drone notes
+		scales.put("ambrette",[50, 54, 55, 62, 67, 69, 70, 72, 74, 76, 77, 79, 81, 82, 84, 86, 88, 89, 91, 93, 94, 96, 98]);
+		scales.put("benzoin",[43, 47, 48, 55, 60, 62, 64, 66, 67, 69, 71, 72, 74, 76, 78, 79, 81, 83, 84, 86, 88, 90, 91, 93, 95]);
+		scales.put("bergamot",[47, 45, 50, 57, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89, 91, 93, 95, 96]);
+		scales.put("labdanum",[52, 54, 55, 57, 64, 69, 71, 72, 74, 76, 78, 79, 81, 83, 84, 86, 88, 90, 91, 93, 95, 96, 98, 100, 102]);
+		scales.put("neroli",[50, 54, 55, 62, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89, 91, 93, 95, 96, 98]);
+		scales.put("orris",[48, 50, 53, 60, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89, 91, 93, 95, 96, 98]);
+		scales.put("tolu",[54, 53, 58, 65, 70, 72, 74, 76, 77, 79, 81, 82, 84, 86, 88, 89, 91, 93, 94, 96, 98, 100]);
+		scales.put("vetiver",[43, 47, 48, 55, 60, 62, 64, 65, 67, 69, 70, 72, 74, 76, 77, 79, 81, 82, 84, 86, 88, 89, 91, 93, 94, 96]);
+		scales.put("ylang",[45, 47, 46, 50, 57, 62, 64, 66, 67, 69, 71, 72, 74, 78, 79, 81, 83, 84, 86, 90, 91, 93, 95, 96]);
+		scale = scales.at("neroli");
+
+
 		// initialize dictionaries
 		syns = Dictionary.new();
 		buses = Dictionary.new();
@@ -168,56 +184,107 @@ BloomWildly {
 			bloomRecorders[i].run();
 		});
 
-		// starts the pad
-		if (timer.notNil,{
-			timer.stop;
+		// starts the drone
+		if (timerDrone.notNil,{
+			timerDrone.stop;
 		});
-		timer = { inf.do({
+		timerDrone = { inf.do({
 			delta.wait;
 			tick = tick + 1;
 			if (tickBetweenChords>0,{
 				tickBetweenChords = tickBetweenChords - 1;
 				if (tickBetweenChords==0) {
-					var chord;
-					tickBetweenChords = ticksBetweenChords;
-					// next chord
-					chordNum = chordNum + 1;
-					chord = chords[chordNum.mod(chords.size)];
-					4.do({ arg i ;
-						("[BloomWildly] playing chord"+chord).postln;
-						if (i==0,{
-							if (syns.at("bass").notNil,{
-								syns.at("bass").set(\gate,0);
-							});
-							syns.put("bass",Synth.after(syns.at("mod"++i),"pad",[
-								modBus: buses.at("mod"++i),
-								freq: (chord[i]+noteRoot-24).midicps,
-							]));
-							NodeWatcher.register(syns.at("bass"));
-						},{
-							// stop old pad
-							if (syns.at("pad"++i).notNil,{
-								syns.at("pad"++i).set(\gate,0);
-							});
-							syns.put("pad"++i,Synth.after(syns.at("mod"++i),"pad",[
-								modBus: buses.at("mod"++i),
-								freq: (chord[i]+noteRoot).midicps,
-								amp: 6.neg.dbamp,
-							]));
-							NodeWatcher.register(syns.at("pad"++i));
-						});
+					var note = [scale[0],scale[1]].choose + noteRoot;
+					("[BloomWildly] playing drone").postln;
+					if (syns.at("bass").notNil,{
+						syns.at("bass").set(\gate,0);
 					});
-
+					syns.put("bass",Synth.after(syns.at("mod"++i),"pad",[
+						modBus: buses.at("mod"++i),
+						freq: (note-24).midicps,
+					]));
+					NodeWatcher.register(syns.at("bass"));
+					// stop old pad
+					if (syns.at("drone").notNil,{
+						syns.at("drone").set(\gate,0);
+					});
+					syns.put("drone",Synth.after(syns.at("mod"++i),"pad",[
+						modBus: buses.at("mod"++i),
+						freq: (note).midicps,
+						amp: 6.neg.dbamp,
+					]));
+					NodeWatcher.register(syns.at("drone"));
 				}
 			});
 		})}.fork;
 
+		// // starts the pad
+		// if (timer.notNil,{
+		// 	timer.stop;
+		// });
+		// timer = { inf.do({
+		// 	delta.wait;
+		// 	tick = tick + 1;
+		// 	if (tickBetweenChords>0,{
+		// 		tickBetweenChords = tickBetweenChords - 1;
+		// 		if (tickBetweenChords==0) {
+		// 			var chord;
+		// 			tickBetweenChords = ticksBetweenChords;
+		// 			// next chord
+		// 			chordNum = chordNum + 1;
+		// 			chord = chords[chordNum.mod(chords.size)];
+		// 			4.do({ arg i ;
+		// 				("[BloomWildly] playing chord"+chord).postln;
+		// 				if (i==0,{
+		// 					if (syns.at("bass").notNil,{
+		// 						syns.at("bass").set(\gate,0);
+		// 					});
+		// 					syns.put("bass",Synth.after(syns.at("mod"++i),"pad",[
+		// 						modBus: buses.at("mod"++i),
+		// 						freq: (chord[i]+noteRoot-24).midicps,
+		// 					]));
+		// 					NodeWatcher.register(syns.at("bass"));
+		// 				},{
+		// 					// stop old pad
+		// 					if (syns.at("pad"++i).notNil,{
+		// 						syns.at("pad"++i).set(\gate,0);
+		// 					});
+		// 					syns.put("pad"++i,Synth.after(syns.at("mod"++i),"pad",[
+		// 						modBus: buses.at("mod"++i),
+		// 						freq: (chord[i]+noteRoot).midicps,
+		// 						amp: 6.neg.dbamp,
+		// 					]));
+		// 					NodeWatcher.register(syns.at("pad"++i));
+		// 				});
+		// 			});
+
+		// 		}
+		// 	});
+		// })}.fork;
+
 		"[BloomWildly] ready".postln;
+	}
+
+	setDelay {
+		arg v;
+		patternDeath = v;
+	}
+
+	setScale {
+		arg v;
+		if (scales.at(v).notNil,{
+			scale = scales.at(v);
+		});
+	}
+
+	setRoot {
+		arg v;
+		noteRoot = v;
 	}
 
 	record {
 		arg i,v;
-		var note = scale[v.mod(16)]+noteRoot;
+		var note = scale[v.mod(16)+2]+noteRoot;
 		bloomRecorders[i].record(v, { arg pattern, v, age;
 			this.fnEmit(i, pattern, v, age);
 		});
@@ -236,6 +303,7 @@ BloomWildly {
 			val.free;
 		});
 		timer.stop;
+		timerDrone.stop;
 		bloomSample.free;
 		numRecorders.do({arg i;
 			bloomRecorders[i].free;
