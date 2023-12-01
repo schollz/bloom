@@ -16,7 +16,10 @@ def get_notes(fname):
     with open(fname) as f:
         for line in f:
             line = line.strip()
-            notes.append(float(line))
+            try:
+                notes.append(float(line))
+            except:
+                pass
     return notes
 
 
@@ -92,4 +95,4 @@ else:
         # print(f"number of notes: {len(notes_in_scale)}")
         # print(notes_in_drone)
         # print(notes_in_scale)
-        print(f'scales.put("{scale}",{notes_in_drone+notes_in_scale})')
+        print(f'scales.put("{scale}",{notes_in_drone+notes_in_scale});')
