@@ -144,15 +144,15 @@ BloomWildly {
 		// initialize scales
 		scales = Dictionary.new();
 		// first two notes of the scale are drone notes
-scales.put("ambrette",[50, 54, 55, 62, 67, 69, 70, 72, 74, 76, 77, 79, 81, 82, 84, 86, 88, 89, 91, 93, 94, 96, 98]);
-scales.put("benzoin",[43, 47, 48, 55, 60, 62, 64, 66, 67, 69, 71, 72, 74, 76, 78, 79, 81, 83, 84, 86, 88, 90, 91, 93, 95]);
-scales.put("bergamot",[47, 45, 50, 57, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89, 91, 93, 95, 96]);
-scales.put("labdanum",[52, 54, 55, 57, 64, 69, 71, 72, 74, 76, 78, 79, 81, 83, 84, 86, 88, 90, 91, 93, 95, 96, 98, 100, 102]);
-scales.put("neroli",[50, 54, 55, 62, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89, 91, 93, 95, 96, 98]);
-scales.put("orris",[48, 50, 53, 60, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89, 91, 93, 95, 96, 98]);
-scales.put("tolu",[54, 53, 58, 65, 70, 72, 74, 76, 77, 79, 81, 82, 84, 86, 88, 89, 91, 93, 94, 96, 98, 100]);
-scales.put("vetiver",[43, 46, 47, 48, 55, 60, 62, 64, 65, 67, 69, 70, 72, 74, 76, 77, 79, 81, 82, 84, 86, 88, 89, 91, 93, 94, 96]);
-scales.put("ylang",[45, 47, 46, 50, 57, 62, 64, 66, 67, 69, 71, 72, 74, 78, 79, 81, 83, 84, 86, 90, 91, 93, 95, 96]);
+		scales.put("ambrette",[50, 54, 55, 62, 67, 69, 70, 72, 74, 76, 77, 79, 81, 82, 84, 86, 88, 89, 91, 93, 94, 96, 98]);
+		scales.put("benzoin",[43, 47, 48, 55, 60, 62, 64, 66, 67, 69, 71, 72, 74, 76, 78, 79, 81, 83, 84, 86, 88, 90, 91, 93, 95]);
+		scales.put("bergamot",[47, 45, 50, 57, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89, 91, 93, 95, 96]);
+		scales.put("labdanum",[52, 54, 55, 57, 64, 69, 71, 72, 74, 76, 78, 79, 81, 83, 84, 86, 88, 90, 91, 93, 95, 96, 98, 100, 102]);
+		scales.put("neroli",[50, 54, 55, 62, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89, 91, 93, 95, 96, 98]);
+		scales.put("orris",[48, 50, 53, 60, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89, 91, 93, 95, 96, 98]);
+		scales.put("tolu",[54, 53, 58, 65, 70, 72, 74, 76, 77, 79, 81, 82, 84, 86, 88, 89, 91, 93, 94, 96, 98, 100]);
+		scales.put("vetiver",[43, 46, 47, 48, 55, 60, 62, 64, 65, 67, 69, 70, 72, 74, 76, 77, 79, 81, 82, 84, 86, 88, 89, 91, 93, 94, 96]);
+		scales.put("ylang",[45, 47, 46, 50, 57, 62, 64, 66, 67, 69, 71, 72, 74, 78, 79, 81, 83, 84, 86, 90, 91, 93, 95, 96]);
 
 		scale = scales.at("labdanum");
 
@@ -190,37 +190,37 @@ scales.put("ylang",[45, 47, 46, 50, 57, 62, 64, 66, 67, 69, 71, 72, 74, 78, 79, 
 		/*
 		// starts the drone
 		if (timerDrone.notNil,{
-			timerDrone.stop;
+		timerDrone.stop;
 		});
 		timerDrone = { inf.do({
-			delta.wait;
-			tick = tick + 1;
-			if (tickBetweenChordsDrone>0,{
-				tickBetweenChordsDrone = tickBetweenChordsDrone - 1;
-				if (tickBetweenChordsDrone==0) {
-					var note = [scale[0],scale[1]].choose.postln + noteRoot;
-					tickBetweenChordsDrone = ticksBetweenChords;
-					("[BloomWildly] playing drone").postln;
-					if (syns.at("bass").notNil,{
-						syns.at("bass").set(\gate,0);
-					});
-					syns.put("bass",Synth.after(syns.at("mod1"),"pad",[
-						modBus: buses.at("mod1"),
-						freq: (note-12).midicps,
-					]));
-					NodeWatcher.register(syns.at("bass"));
-					// stop old pad
-					if (syns.at("drone").notNil,{
-						syns.at("drone").set(\gate,0);
-					});
-					syns.put("drone",Synth.after(syns.at("mod0"),"pad",[
-						modBus: buses.at("mod0"),
-						freq: (note).midicps,
-						amp: 0.dbamp,
-					]));
-					NodeWatcher.register(syns.at("drone"));
-				}
-			});
+		delta.wait;
+		tick = tick + 1;
+		if (tickBetweenChordsDrone>0,{
+		tickBetweenChordsDrone = tickBetweenChordsDrone - 1;
+		if (tickBetweenChordsDrone==0) {
+		var note = [scale[0],scale[1]].choose.postln + noteRoot;
+		tickBetweenChordsDrone = ticksBetweenChords;
+		("[BloomWildly] playing drone").postln;
+		if (syns.at("bass").notNil,{
+		syns.at("bass").set(\gate,0);
+		});
+		syns.put("bass",Synth.after(syns.at("mod1"),"pad",[
+		modBus: buses.at("mod1"),
+		freq: (note-12).midicps,
+		]));
+		NodeWatcher.register(syns.at("bass"));
+		// stop old pad
+		if (syns.at("drone").notNil,{
+		syns.at("drone").set(\gate,0);
+		});
+		syns.put("drone",Synth.after(syns.at("mod0"),"pad",[
+		modBus: buses.at("mod0"),
+		freq: (note).midicps,
+		amp: 0.dbamp,
+		]));
+		NodeWatcher.register(syns.at("drone"));
+		}
+		});
 		})}.fork;
 		*/
 
