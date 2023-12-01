@@ -199,8 +199,8 @@ BloomWildly {
 					if (syns.at("bass").notNil,{
 						syns.at("bass").set(\gate,0);
 					});
-					syns.put("bass",Synth.after(syns.at("mod"++i),"pad",[
-						modBus: buses.at("mod"++i),
+					syns.put("bass",Synth.after(syns.at("mod1"),"pad",[
+						modBus: buses.at("mod1"),
 						freq: (note-24).midicps,
 					]));
 					NodeWatcher.register(syns.at("bass"));
@@ -208,8 +208,8 @@ BloomWildly {
 					if (syns.at("drone").notNil,{
 						syns.at("drone").set(\gate,0);
 					});
-					syns.put("drone",Synth.after(syns.at("mod"++i),"pad",[
-						modBus: buses.at("mod"++i),
+					syns.put("drone",Synth.after(syns.at("mod0"),"pad",[
+						modBus: buses.at("mod0"),
 						freq: (note).midicps,
 						amp: 6.neg.dbamp,
 					]));
