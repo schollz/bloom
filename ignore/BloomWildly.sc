@@ -25,15 +25,19 @@ BloomWildly {
 	}
 
 	fnEmit {
-		arg recorder, pattern, v, age;
+		arg recorder, pattern, v, age, patternI, patternN;
 		var note;
 		var idx = v[0]*90;
+		var release = 1;
 		idx = idx + (v[1]*10);
 		idx = idx.linlin(0,100,0,scale.size-2).round.asInteger;
 		note = scale[idx.mod(scale.size-2)+2];
 		note = note + noteRoot - 24;
-		("[BloomWildly] emit"+v+"age"+age+"pattern"+pattern).postln;
-		Synth.head(server,"bell",[\freq,(note+12).midicps,\amp,(age.linlin(0,patternDeath,0,-18).dbamp)]);
+		if (patternI+1==patternN,{
+			release = 4;
+		});
+		("[BloomWildly] emit"+v+"age"+age+"pattern"+pattern+patternI+patternN).postln;
+		Synth.head(server,"bell",[\freq,(note+12).midicps,\amp,(age.linlin(0,patternDeath,0,-18).dbamp),\release,release]);
 		v = v.add(age);
 		NetAddr("127.0.0.1", 10111).sendMsg("/emit",*v);
 		if (age>patternDeath,{
@@ -43,7 +47,7 @@ BloomWildly {
 
 	init {
 		arg argServer;
-
+		var starting = 10000;
 		server = argServer;
 
 		// initialize globals
@@ -65,8 +69,8 @@ BloomWildly {
 		bloomSample = BloomSample(server);
 		bloomRecorders = Array.newClear(numRecorders);
 		numRecorders.do({ arg i;
-			bloomRecorders[i] = BloomRecord(server, { arg pattern, v, age;
-				this.fnEmit(i, pattern, v, age);
+			bloomRecorders[i] = BloomRecord(server, { arg pattern, v, age, patternI, patternN;
+				this.fnEmit(i, pattern, v, age, patternI, patternN);
 			});
 		});
 
@@ -76,7 +80,7 @@ BloomWildly {
 			var lfo;
 			oscfreq = {freq * LFNoise2.kr(Rand(0.0001,0.5)).range(0.98, 1.02)}!10;
 			lfo = { SinOsc.kr({ 1/Rand(2,52) }!10) };
-			env = Env.adsr(0.2, 1, 0.9,0.1).kr(doneAction:2, gate: gate);
+			env = Env.adsr(8, 1, 0.9,4).kr(doneAction:2, gate: gate);
 			output = LFSaw.ar(oscfreq, mul: lfo.value.range(0,1));
 			output = Fold.ar(output,-0.5,0.5);
 			output = RLPF.ar(output, (env*freq*0.7) + (freq * lfo.value.range(0.1,2)), lfo.value.range(0.2,1));
@@ -94,13 +98,13 @@ BloomWildly {
 		}).send(server);
 
 		SynthDef.new("bell",	{
-			arg freq=440, rate=0.6, pan=0.0, amp=1.0, dur=1.0, lfor1=0.08, lfor2=0.05, nl=0.3, filt=5000;
+			arg freq=440, rate=0.6, pan=0.0, amp=1.0, dur=1.0, lfor1=0.08, lfor2=0.05, nl=0.3, filt=5000, release=1;
 			var sig, sub, lfo1, lfo2, env, noise;
 
 			lfo1  = SinOsc.kr(lfor1, 0.5, 1, 0);
 			lfo2  = SinOsc.kr(lfor2, 0, 1, 0);
 			sig   = SinOscFB.ar(freq, lfo1, 1, 0);
-			env = EnvGen.ar(Env.perc(0.005,rrand(2,4)),doneAction:2);
+			env = EnvGen.ar(Env.perc(0.005,rrand(2,4)*release),doneAction:2);
 			noise = PinkNoise.ar(nl, 0);
 			sig   = (sig +  noise) * env;
 			sig   = MoogFF.ar(sig, 5000, 0, 0, 1, 0);
@@ -194,28 +198,36 @@ BloomWildly {
 			if (tickBetweenChordsDrone>0,{
 				tickBetweenChordsDrone = tickBetweenChordsDrone - 1;
 				if (tickBetweenChordsDrone==0) {
-					var note = [scale[0],scale[1]].choose.postln + noteRoot;
-					tickBetweenChordsDrone = ticksBetweenChords;
-					("[BloomWildly] playing drone").postln;
-					if (syns.at("bass").notNil,{
-						syns.at("bass").set(\gate,0);
+					if (3.rand<starting,{
+						var note = [scale[0],scale[1]].choose.postln + noteRoot;
+						tickBetweenChordsDrone = ticksBetweenChords;
+						("[BloomWildly] playing bass").postln;
+						if (syns.at("bass").notNil,{
+							syns.at("bass").set(\gate,0);
+						});
+						syns.put("bass",Synth.after(syns.at("mod1"),"bass",[
+							modBus: buses.at("mod1"),
+							freq: (note-12).midicps,
+							amp: 6.dbamp,
+						]));
+						NodeWatcher.register(syns.at("bass"));
 					});
-					syns.put("bass",Synth.after(syns.at("mod1"),"bass",[
-						modBus: buses.at("mod1"),
-						freq: (note-12).midicps,
-						amp: 6.dbamp,
-					]));
-					NodeWatcher.register(syns.at("bass"));
-					// stop old pad
-					if (syns.at("drone").notNil,{
-						syns.at("drone").set(\gate,0);
+					if (3.rand<starting, {
+						// stop old pad
+						("[BloomWildly] playing drone").postln;
+						if (syns.at("drone").notNil,{
+							syns.at("drone").set(\gate,0);
+						});
+						syns.put("drone",Synth.after(syns.at("mod0"),"pad",[
+							modBus: buses.at("mod0"),
+							freq: (scale.choose.mod(12)+noteRoot+48).midicps,
+							amp: 6.neg.dbamp,
+						]));
+						NodeWatcher.register(syns.at("drone"));
 					});
-					syns.put("drone",Synth.after(syns.at("mod0"),"pad",[
-						modBus: buses.at("mod0"),
-						freq: (note).midicps,
-						amp: 6.neg.dbamp,
-					]));
-					NodeWatcher.register(syns.at("drone"));
+					if (starting>2,{
+						starting = 2;
+					})
 				}
 			});
 		})}.fork;
@@ -288,8 +300,8 @@ BloomWildly {
 	record {
 		arg i,v;
 		var note = scale[v.mod(16)+2]+noteRoot;
-		bloomRecorders[i].record(v, { arg pattern, v, age;
-			this.fnEmit(i, pattern, v, age);
+		bloomRecorders[i].record(v, { arg pattern, v, age, patternI, patternN;
+			this.fnEmit(i, pattern, v, age, patternI, patternN);
 		});
 	}
 

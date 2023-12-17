@@ -63,7 +63,7 @@ BloomRecord {
 			if (isPlaying,{
 				if (patternHistory[patternCurrent].notNil,{
 					patternHistory[patternCurrent].emit(tick,
-						{ arg v, age; fnEmit.(patternCurrent, v, age); },
+						{ arg v, age, patternI, patternN; fnEmit.(patternCurrent, v, age,patternI, patternN); },
 						{ arg v;
 							("[BloomRecord] finished playing pattern "+patternCurrent).postln;
 							isPlaying = false;
@@ -94,10 +94,10 @@ BloomRecord {
 	record {
 		arg v;
 		if (ticksBetweenRecordings==0,{
-			ticksBetweenRecordings = 6 / delta;
+			ticksBetweenRecordings = 3 / delta;
 			patternRecording = BloomPattern();
 		});
-		patternRecording.record(tick, v, { arg v, age; fnEmit.(patternCurrent, v, age); },);
+		patternRecording.record(tick, v, { arg v, age; fnEmit.(patternCurrent, v, age, 0, 0); },);
 	}
 
 	remove {
@@ -109,5 +109,11 @@ BloomRecord {
 		});
 		("[BloomRecord] removed pattern"+pattern).postln;
 		patternHistory.put(pattern,nil);
+	}
+
+	free {
+		if (timer.notNil,{
+			timer.stop;
+		});
 	}
 }

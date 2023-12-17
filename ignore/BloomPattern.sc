@@ -58,7 +58,7 @@ BloomPattern {
 			if ((time-timeLast)>arrTime[itPlay],{
 				// play
 				if (fnEmit.notNil,{
-					fnEmit.(arrValue[itPlay],Date.getDate.rawSeconds-startTime);
+					fnEmit.(arrValue[itPlay],Date.getDate.rawSeconds-startTime,itPlay,arrTime.size);
 				});
 				// randomly modulate the delta
 				arrTime[itPlay] = arrTime[itPlay] + (rrand(-1000,1000)/2000);
