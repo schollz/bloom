@@ -35,8 +35,8 @@ s.waitForBoot({
 	~lastRow = rows-1;
 
 	~m.key({ arg x,y,z;
-		var pos = x + (y * 16);
-		var idx = 15-x;
+		var pos = x + (y * cols);
+		var idx = (cols-1)-x;
 		var recorder = 0;
 		if (y>3,{
 			recorder = 1;
@@ -45,7 +45,7 @@ s.waitForBoot({
 		~press[pos]=z;
 		if (z>0,{
 			~step[pos] = z*15;
-			~bloom.record(recorder,[idx,x,y]);
+			~bloom.record(recorder,[x/cols,y/rows]);
 			draw.value();
 		},{
 		});
@@ -54,7 +54,7 @@ s.waitForBoot({
 	draw = {
 		for(0,~lastCol, {arg x;
 			for(0,~lastRow, {arg y;
-				var pos=y*16+x;
+				var pos=y*cols+x;
 				if (~step[pos]>0,{
 					if (~press[pos]<1,{
 						~step[pos]=~step[pos]-1;
@@ -75,10 +75,10 @@ s.waitForBoot({
 	timer.play();
 
 	OSCFunc({  arg msg, time, addr, recvPort;
-		var x = msg[2];
-		var y = msg[3];
-		var pos = x + (y * 16);
-		var age = msg[4];
+		var x = msg[1]*cols;
+		var y = msg[2]*rows;
+		var pos = x + (y * cols);
+		var age = msg[3];
 		age.postln;
 		// [msg, time, addr, recvPort].postln;
 		// [x,y,pos].postln;

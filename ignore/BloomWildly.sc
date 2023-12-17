@@ -27,20 +27,15 @@ BloomWildly {
 	fnEmit {
 		arg recorder, pattern, v, age;
 		var note;
-		note = scale[v[0].mod(16)]+noteRoot-12;
-		("[BloomWildly] emit"+v+"age"+age+"pattern"+pattern+"note"+note).postln;
-		// if (recorder<1,{
-		// 	bloomSample.noteOn(recorder,"/home/zns/Documents/bloom/samples/rhodes",note,v[2]*12+20.rand,0);
-		// },{
-		// 	bloomSample.noteOn(recorder,"/home/zns/Documents/bloom/samples/rhodes",note,v[2]*12+20.rand,0);
-		// });
-		Synth.head(server,"bell",[\freq,(note+12).midicps,\amp,(age.linlin(0,patternDeath,0,-12).dbamp)]);
+		var idx = v[0]*90;
+		idx = idx + (v[1]*10);
+		idx = idx.linlin(0,100,0,scale.size-2).round.asInteger;
+		note = scale[idx.mod(scale.size-2)+2];
+		note = note + noteRoot - 24;
+		("[BloomWildly] emit"+v+"age"+age+"pattern"+pattern).postln;
+		Synth.head(server,"bell",[\freq,(note+12).midicps,\amp,(age.linlin(0,patternDeath,0,-18).dbamp)]);
 		v = v.add(age);
 		NetAddr("127.0.0.1", 10111).sendMsg("/emit",*v);
-		// TODO
-		// emit a note based on current sample with
-		// amplitidue defined by the age of the pattern
-		// TODO create a parameter for the pattern age limit
 		if (age>patternDeath,{
 			bloomRecorders[recorder].remove(pattern);
 		});
@@ -136,7 +131,7 @@ BloomWildly {
 			]);
 
 			snd = snd * EnvGen.ar(Env.adsr(3,1,1,1));
-			snd = HPF.ar(snd,60);
+			snd = HPF.ar(snd,30);
 			snd = LPF.ar(snd,12000);
 			ReplaceOut.ar(0,snd * Lag.kr(\db.kr(0),30).dbamp);
 		}).send(server);
@@ -154,7 +149,8 @@ BloomWildly {
 		scales.put("vetiver",[43, 46, 47, 48, 55, 60, 62, 64, 65, 67, 69, 70, 72, 74, 76, 77, 79, 81, 82, 84, 86, 88, 89, 91, 93, 94, 96]);
 		scales.put("ylang",[45, 47, 46, 50, 57, 62, 64, 66, 67, 69, 71, 72, 74, 78, 79, 81, 83, 84, 86, 90, 91, 93, 95, 96]);
 
-		scale = scales.at("labdanum");
+		scale = scales.at("orris");
+		scale.postln;
 
 
 		// initialize dictionaries
@@ -187,44 +183,45 @@ BloomWildly {
 			bloomRecorders[i].run();
 		});
 
-		/*
+
 		// starts the drone
 		if (timerDrone.notNil,{
-		timerDrone.stop;
+			timerDrone.stop;
 		});
 		timerDrone = { inf.do({
-		delta.wait;
-		tick = tick + 1;
-		if (tickBetweenChordsDrone>0,{
-		tickBetweenChordsDrone = tickBetweenChordsDrone - 1;
-		if (tickBetweenChordsDrone==0) {
-		var note = [scale[0],scale[1]].choose.postln + noteRoot;
-		tickBetweenChordsDrone = ticksBetweenChords;
-		("[BloomWildly] playing drone").postln;
-		if (syns.at("bass").notNil,{
-		syns.at("bass").set(\gate,0);
-		});
-		syns.put("bass",Synth.after(syns.at("mod1"),"pad",[
-		modBus: buses.at("mod1"),
-		freq: (note-12).midicps,
-		]));
-		NodeWatcher.register(syns.at("bass"));
-		// stop old pad
-		if (syns.at("drone").notNil,{
-		syns.at("drone").set(\gate,0);
-		});
-		syns.put("drone",Synth.after(syns.at("mod0"),"pad",[
-		modBus: buses.at("mod0"),
-		freq: (note).midicps,
-		amp: 0.dbamp,
-		]));
-		NodeWatcher.register(syns.at("drone"));
-		}
-		});
+			delta.wait;
+			tick = tick + 1;
+			if (tickBetweenChordsDrone>0,{
+				tickBetweenChordsDrone = tickBetweenChordsDrone - 1;
+				if (tickBetweenChordsDrone==0) {
+					var note = [scale[0],scale[1]].choose.postln + noteRoot;
+					tickBetweenChordsDrone = ticksBetweenChords;
+					("[BloomWildly] playing drone").postln;
+					if (syns.at("bass").notNil,{
+						syns.at("bass").set(\gate,0);
+					});
+					syns.put("bass",Synth.after(syns.at("mod1"),"pad",[
+						modBus: buses.at("mod1"),
+						freq: (note-12).midicps,
+						amp: 6.neg.dbamp,
+					]));
+					NodeWatcher.register(syns.at("bass"));
+					// stop old pad
+					if (syns.at("drone").notNil,{
+						syns.at("drone").set(\gate,0);
+					});
+					syns.put("drone",Synth.after(syns.at("mod0"),"pad",[
+						modBus: buses.at("mod0"),
+						freq: (note).midicps,
+						amp: 6.neg.dbamp,
+					]));
+					NodeWatcher.register(syns.at("drone"));
+				}
+			});
 		})}.fork;
-		*/
 
-		// starts the pad
+
+/*		// starts the pad
 		if (timer.notNil,{
 			timer.stop;
 		});
@@ -266,7 +263,7 @@ BloomWildly {
 					});
 				}
 			});
-		})}.fork;
+		})}.fork;*/
 
 		"[BloomWildly] ready".postln;
 	}
