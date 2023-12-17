@@ -16,11 +16,11 @@ Engine_Bloom : CroneEngine {
         // Bloom specific v0.0.1
         var server = context.server;
 
-        bloom = BloomWidly(server);
+        bloom = BloomWildly(server);
 
-        // this.addCommand("key","ff",{ arg msg;
-        //     bloom.record(0,msg[1],msg[2]);
-        // });
+        this.addCommand("key","ff",{ arg msg;
+            bloom.record(0,[msg[1],msg[2]]);
+        });
     }
 
     

@@ -15,7 +15,7 @@ ggrid_=include("lib/ggrid")
 -- check for requirements
 installer_=include("lib/scinstaller/scinstaller")
 installer=installer_:new{requirements={"Fverb"},zip="TODO"}
--- engine.name=installer:ready() and 'Bloom' or nil
+engine.name=installer:ready() and 'Bloom' or nil
 
 
 
@@ -37,6 +37,26 @@ function init()
   ggrid.circles = {
     {x=64,y=32,r=1,l=15},
   }
+
+  -- setup osc
+  osc_fun={
+    emit=function(args)
+      local x = tonumber(args[1])
+      local y = tonumber(args[2])
+      local l = util.linlin(0,180,15,1,tonumber(args[#args]))
+      add_circle({x=x*128,y=y*64,r=0,l=l})
+    end,
+  }
+  osc.event=function(path,args,from)
+    if string.sub(path,1,1)=="/" then
+      path=string.sub(path,2)
+    end
+    if path~=nil and osc_fun[path]~=nil then
+      osc_fun[path](args)
+    else
+      -- print("osc.event: '"..path.."' ?")
+    end
+  end
   
   redraw()
 end
@@ -63,13 +83,13 @@ function update_circles()
   local new_circles = {}
   local toremove = {}
   for i,c in ipairs(ggrid.circles) do 
-    c.r = c.r + 0.5
-    c.l = c.l - 30/200
+    c.r = c.r + 0.4
+    c.l = c.l - (c.l/50)
     screen.level(util.round(c.l))
     screen.circle(util.round(c.x),util.round(c.y),util.round(c.r)) 
     screen.fill()
 
-    if c.r < 64 and c.l>0.5 then
+    if c.r < 96 and c.l>0.25 then
       table.insert(new_circles,{x=c.x,y=c.y,r=c.r,l=c.l,visual=c.visual,rf=c.rd})
     end
   end

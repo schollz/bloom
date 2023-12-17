@@ -299,6 +299,7 @@ BloomWildly {
 	}
 
 	free {
+		"[bloom] free".postln;
 		syns.keysValuesDo({ arg name, val;
 			val.free;
 		});

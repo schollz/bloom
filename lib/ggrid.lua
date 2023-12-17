@@ -61,9 +61,13 @@ function GGrid:key_press(row,col,on)
     self.pressed_buttons[row..","..col]=nil
   end
   if on then 
-    self.add_circle({x=col*128/self.cols,y=row*64/self.rows,r=0,l=15})
+    local x = col/self.cols
+    local y = row/self.rows
+    engine.key(x,y)
+    self.add_circle({x=x*128,y=y*64,r=0,l=15})
   end
 end
+
 
 
 function GGrid:get_visual()
@@ -71,7 +75,7 @@ function GGrid:get_visual()
   for row=1,self.rows do
     for col=1,self.cols do
       if self.visual[row][col]>0 then 
-        self.visual[row][col]=self.visual[row][col]-0.3
+        self.visual[row][col]=self.visual[row][col]-self.visual[row][col]/50
         if self.visual[row][col]<0 then
           self.visual[row][col]=0
         end  
@@ -102,7 +106,7 @@ function GGrid:get_visual()
         end
         if self.circles[i].visual[y][x]==nil and x>0 and x<=self.cols and y>0 and y<=self.rows then
           self.circles[i].visual[y][x]=true
-          self.visual[y][x]=self.visual[y][x] + c.l
+          self.visual[y][x]=self.visual[y][x] + c.l/2
           if (self.visual[y][x]>15) then
             self.visual[y][x]=15
           end
