@@ -30,6 +30,7 @@ BloomWildly {
 		var note;
 		var idx = v[0]*90;
 		var release = 1;
+		var noiserelease;
 		idx = idx + (v[1]*10);
 		idx = idx.linlin(0,100,0,scale.size-2).round.asInteger;
 		note = scale[idx.mod(scale.size-2)+2];
@@ -37,8 +38,10 @@ BloomWildly {
 		if (patternI+1==patternN,{
 			release = 4;
 		});
+		noiserelease = release;
+		release = release * age.linlin(0,patternDeath,1,0.5);
 		("[BloomWildly] emit"+v+"age"+age+"pattern"+pattern+patternI+patternN).postln;
-		Synth.head(server,"bell",[\freq,(note+12).midicps,\amp,(age.linlin(0,patternDeath,0,-18).dbamp),\release,release]);
+		Synth.head(server,"bell",[\freq,(note+12).midicps,\amp,(age.linlin(0,patternDeath,0,-18).dbamp),\release,release,\noiserelease,noiserelease]);
 		v = v.add(age);
 		NetAddr("127.0.0.1", 10111).sendMsg("/emit",*v);
 		if (age>patternDeath,{
@@ -101,15 +104,16 @@ BloomWildly {
 
 
 		SynthDef.new("bell",	{
-			arg freq=440, rate=0.6, pan=0.0, amp=1.0, dur=1.0, lfor1=0.08, lfor2=0.05, nl=0.3, filt=5000, release=1;
-			var sig, sub, lfo1, lfo2, env, noise;
+			arg freq=440, rate=0.6, pan=0.0, amp=1.0, dur=1.0, lfor1=0.08, lfor2=0.05, nl=0.4, filt=5000, release=1, noiserelease=1;
+			var sig, sub, lfo1, lfo2, env, noiseenv, noise;
 
 			lfo1  = SinOsc.kr(lfor1, 0.5, 1, 0);
 			lfo2  = SinOsc.kr(lfor2, 0, 1, 0);
 			sig   = SinOscFB.ar(freq, lfo1, 1, 0);
 			env = EnvGen.ar(Env.perc(0.005,rrand(2,4)*release),doneAction:2);
-			noise = PinkNoise.ar(nl, 0);
-			sig   = (sig +  noise) * env;
+			noiseenv = EnvGen.ar(Env.perc(0.005,rrand(2,4)*noiserelease),doneAction:2);
+			noise = PinkNoise.ar(nl, 0) * noiseenv;
+			sig   = (sig * env) +  noise;
 			sig   = MoogFF.ar(sig, 5000, 0, 0, 1, 0);
 			sig   = Pan2.ar(sig, pan, amp);
 			Out.ar(0, sig * 0.2);
