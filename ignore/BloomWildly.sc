@@ -75,11 +75,11 @@ BloomWildly {
 		});
 
 		// define synths
-		SynthDef("bass", { arg freq = 440, amp = 0.5, gate = 1;
+		SynthDef("bass", { arg freq = 440, amp = 0.5, gate = 1, lfoIn=0;
 			var snd, env, oscfreq, output;
 			var lfo;
 			oscfreq = {freq * LFNoise2.kr(Rand(0.0001,0.5)).range(0.98, 1.02)}!10;
-			lfo = { SinOsc.kr({ 1/Rand(2,52) }!10) };
+			lfo = In.kr(lfoIn,10);
 			env = Env.adsr(8, 1, 0.9,4).kr(doneAction:2, gate: gate);
 			output = LFSaw.ar(oscfreq, mul: lfo.value.range(0,1));
 			output = Fold.ar(output,-0.5,0.5);
@@ -95,6 +95,10 @@ BloomWildly {
 
 		SynthDef("lfnoise2",{ arg bus=0,freq=10;
 			Out.kr(bus,LFNoise2.kr(freq));
+		}).send(server);
+
+		SynthDef("sinebass",{ arg bus=0;
+			Out.kr(bus,{ SinOsc.kr({ 1/Rand(2,52) }!10) });
 		}).send(server);
 
 		SynthDef.new("bell",	{
@@ -126,7 +130,7 @@ BloomWildly {
 			var snd;
 			snd = In.ar(0,2);
 
-			snd = SelectX.ar(LFNoise2.kr(1/5).range(0.3,0.7),[snd,
+			snd = SelectX.ar(LFNoise2.kr(1/5).range(0.2,0.7),[snd,
 				Fverb.ar(snd[0],snd[1],200,
 					input_lowpass_cutoff: LFNoise2.kr(1/3).range(5000,10000),
 					tail_density: LFNoise2.kr(1/3).range(70,90),
@@ -166,6 +170,7 @@ BloomWildly {
 		8.do({ arg i;
 			buses.put("mod"++i,Bus.control(server,1));
 		});
+		buses.put("basslfo",Bus.control(server,10));
 
 		// sync server
 		server.sync;
@@ -181,6 +186,10 @@ BloomWildly {
 				freq: 1/(3+(rrand(0,300000)/100000)),
 			]));
 		});
+
+		syns.put("basslfo",Synth.head(server,"sinebass",[
+			bus:buses.at("basslfo")
+		]));
 
 		// starts the pattern recorderplayer
 		numRecorders.do({ arg i;
@@ -205,8 +214,8 @@ BloomWildly {
 						if (syns.at("bass").notNil,{
 							syns.at("bass").set(\gate,0);
 						});
-						syns.put("bass",Synth.after(syns.at("mod1"),"bass",[
-							modBus: buses.at("mod1"),
+						syns.put("bass",Synth.after(syns.at("basslfo"),"bass",[
+							lfoIn: buses.at("basslfo"),
 							freq: (note-12).midicps,
 							amp: 6.dbamp,
 						]));

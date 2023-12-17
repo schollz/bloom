@@ -12,10 +12,7 @@
 
 musicutil=require("musicutil")
 ggrid_=include("lib/ggrid")
--- check for requirements
-installer_=include("lib/scinstaller/scinstaller")
-installer=installer_:new{requirements={"Fverb"},zip="TODO"}
-engine.name=installer:ready() and 'Bloom' or nil
+engine.name="Bloom"
 
 CURSOR_DEBOUNCE = 150
 cursor={x=64,y=32,r=1,angle=180,moved=CURSOR_DEBOUNCE,show=false}
@@ -25,15 +22,6 @@ function add_circle(c)
 end
 
 function init()
-  if not installer:ready() then
-    clock.run(function()
-      while true do
-        redraw()
-        clock.sleep(1/5)
-      end
-    end)
-    do return end
-  end
   ggrid=ggrid_:new{add_circle=add_circle}
   ggrid.circles = {
     {x=64,y=32,r=1,l=15},
@@ -70,7 +58,7 @@ function init()
     "vetiver",
     "ylang"
   }
-  params:add_option("scale","scale",bloom_scales)
+  params:add_option("scale","scale",bloom_scales,6)
   params:set_action("scale",function(v)
     engine.setScale(params:string("scale"))
   end)
@@ -102,21 +90,7 @@ function init()
   redraw()
 end
 
-function cleanup()
-  params:set("monitor_level",current_monitor_level)
-end
-
-function key(k,z)
-  if not installer:ready() then
-    installer:key(k,z)
-    do return end
-  end
-end
-
 function enc(k,d)
-  if not installer:ready() then
-    do return end
-  end
   if k==1 then
     cursor.moved=CURSOR_DEBOUNCE
     cursor.x = math.random(1,128)
@@ -137,7 +111,6 @@ function key(k,z)
     engine.record(x,y)
     self.add_circle({x=x*128,y=y*64,r=0,l=15})
   end
-
 end
 
 
@@ -163,10 +136,6 @@ function refresh()
 end
 
 function redraw()
-  if not installer:ready() then
-    installer:redraw()
-    do return end
-  end
   screen.clear()
   screen.blend_mode(2)
 
