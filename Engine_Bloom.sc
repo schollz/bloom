@@ -30,6 +30,12 @@ Engine_Bloom : CroneEngine {
         this.addCommand("setSecondsBetweenRecordings","f",{ arg msg;
             bloom.setSecondsBetweenRecordings(msg[1]);
         });
+        this.addCommand("setDroneVolume","f",{ arg msg;
+            bloom.setDroneVolume(msg[1]);
+        });
+        this.addCommand("setSecondsBetweenPatterns","f",{ arg msg;
+            bloom.setSecondsBetweenPatterns(msg[1]);
+        });
 
     }
 
