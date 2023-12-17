@@ -280,7 +280,14 @@ BloomWildly {
 		"[BloomWildly] ready".postln;
 	}
 
-	setDelay {
+	setSecondsBetweenRecordings {
+		arg v;
+		numRecorders.do({arg i;
+			bloomRecorders[i].setSecondsBetweenRecordings(v);
+		});
+	}
+
+	setPatternDuration {
 		arg v;
 		patternDeath = v;
 	}
@@ -288,6 +295,7 @@ BloomWildly {
 	setScale {
 		arg v;
 		if (scales.at(v).notNil,{
+			("[BloomWildly] setting scale to "+v).postln;
 			scale = scales.at(v);
 		});
 	}

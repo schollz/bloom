@@ -63,7 +63,7 @@ function GGrid:key_press(row,col,on)
   if on then 
     local x = col/self.cols
     local y = row/self.rows
-    engine.key(x,y)
+    engine.record(x,y)
     self.add_circle({x=x*128,y=y*64,r=0,l=15})
   end
 end

@@ -1,10 +1,10 @@
 -- bloom v0.0.1
--- bloom clone
+-- (adapted from Eno)
 --
 -- llllllll.co/t/bloom
 --
--- originally created by
--- eno + TODO
+-- 
+-- 
 --    ▼ instructions below ▼
 --
 --
@@ -59,15 +59,46 @@ function init()
     end
   end
 
-  -- clock.run(function()
-  --   while true do 
-  --     clock.sleep(1/10)
-  --     if cursor.moved>0 then
-  --       cursor.moved=cursor.moved-1
-  --     end
-  --   end
-  -- end)
-  
+  local bloom_scales={
+    "ambrette",
+    "benzoin",
+    "bergamot",
+    "labdanum",
+    "neroli",
+    "orris",
+    "tolu",
+    "vetiver",
+    "ylang"
+  }
+  params:add_option("scale","scale",bloom_scales)
+  params:set_action("scale",function(v)
+    engine.setScale(params:string("scale"))
+  end)
+  params:add_number(
+    "duration", -- id
+    "pattern duration", -- name
+    1, -- min
+    600, -- max
+    60, -- default
+    function(param) return string.format("%d sec",param:get()) end -- formatter
+  )
+  params:set_action("duration",function(v)
+    engine.setPatternDuration(params:get("duration"))
+  end)
+  params:add_number(
+    "seconds_between", -- id
+    "after recording", -- name
+    1, -- min
+    10, -- max
+    2, -- default
+    function(param) return string.format("%d sec",param:get()) end -- formatter
+  )
+  params:set_action("seconds_between",function(v)
+    engine.setSecondsBetweenRecordings(params:get("seconds_between"))
+  end)
+
+
+  params:bang()
   redraw()
 end
 
@@ -103,7 +134,7 @@ function key(k,z)
   if k==3 and z==1 then 
     local x = cursor.x / 128
     local y = cursor.y / 64
-    engine.key(x,y)
+    engine.record(x,y)
     self.add_circle({x=x*128,y=y*64,r=0,l=15})
   end
 

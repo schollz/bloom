@@ -18,9 +18,19 @@ Engine_Bloom : CroneEngine {
 
         bloom = BloomWildly(server);
 
-        this.addCommand("key","ff",{ arg msg;
+        this.addCommand("record","ff",{ arg msg;
             bloom.record(0,[msg[1],msg[2]]);
         });
+        this.addCommand("setScale","s",{ arg msg;
+            bloom.setScale(msg[1].asString);
+        });
+        this.addCommand("setPatternDuration","f",{ arg msg;
+            bloom.setPatternDuration(msg[1]);
+        });
+        this.addCommand("setSecondsBetweenRecordings","f",{ arg msg;
+            bloom.setSecondsBetweenRecordings(msg[1]);
+        });
+
     }
 
     

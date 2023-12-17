@@ -6,6 +6,7 @@ BloomRecord {
 	var <patternCurrent;
 	var patternIterator;
 	var ticksBetweenRecordings;
+	var secondsBetweenRecordings;
 	var delta;
 	var isPlaying;
 	var ticksBetweenPatterns;
@@ -38,6 +39,7 @@ BloomRecord {
 		fnEmit = argFnEmit;
 		delta = 0.1;
 		tick = 0;
+		secondsBetweenRecordings = 3;
 		this.clear();
 	}
 
@@ -94,10 +96,16 @@ BloomRecord {
 	record {
 		arg v;
 		if (ticksBetweenRecordings==0,{
-			ticksBetweenRecordings = 3 / delta;
 			patternRecording = BloomPattern();
 		});
+		ticksBetweenRecordings = secondsBetweenRecordings / delta;
 		patternRecording.record(tick, v, { arg v, age; fnEmit.(patternCurrent, v, age, 0, 0); },);
+	}
+
+	setSecondsBetweenRecordings {
+		arg v;
+		("[BloomRecord] set seconds between recordings "+v).postln;
+		secondsBetweenRecordings = v;
 	}
 
 	remove {
