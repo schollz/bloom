@@ -159,7 +159,7 @@ BloomWildly {
 
 		// initialize buses
 		// modulation buses
-		4.do({ arg i;
+		8.do({ arg i;
 			buses.put("mod"++i,Bus.control(server,1));
 		});
 
@@ -200,10 +200,10 @@ BloomWildly {
 					if (syns.at("bass").notNil,{
 						syns.at("bass").set(\gate,0);
 					});
-					syns.put("bass",Synth.after(syns.at("mod1"),"pad",[
+					syns.put("bass",Synth.after(syns.at("mod1"),"bass",[
 						modBus: buses.at("mod1"),
 						freq: (note-12).midicps,
-						amp: 6.neg.dbamp,
+						amp: 6.dbamp,
 					]));
 					NodeWatcher.register(syns.at("bass"));
 					// stop old pad
