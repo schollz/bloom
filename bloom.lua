@@ -11,11 +11,17 @@
 --
 
 musicutil=require("musicutil")
-
+ggrid_=include("lib/ggrid")
 -- check for requirements
 installer_=include("lib/scinstaller/scinstaller")
-installer=installer_:new{requirements={"Fverb","BloomWildly"},zip="TODO"}
-engine.name=installer:ready() and 'Bloom' or nil
+installer=installer_:new{requirements={"Fverb"},zip="TODO"}
+-- engine.name=installer:ready() and 'Bloom' or nil
+
+
+
+function add_circle(c)
+  table.insert(ggrid.circles,c)
+end
 
 function init()
   if not installer:ready() then
@@ -27,62 +33,12 @@ function init()
     end)
     do return end
   end
-
-  current_monitor_level=params:get("monitor_level")
-  params:set("monitor_level",-99)
-
-  local params_menu={
-    {stage=0,id="preamp",name="preamp",min=-96,max=24,exp=false,div=0.1,default=0,formatter=function(param) local v=param:get()>0 and "+" or "";return string.format("%s%2.1f dB",v,param:get()) end},
+  ggrid=ggrid_:new{add_circle=add_circle}
+  ggrid.circles = {
+    {x=64,y=32,r=1,l=15},
   }
-  for _,pram in ipairs(params_menu) do
-    local id=pram.id..pram.stage
-    -- if pram.id=="toggle" then
-    --   params:add_separator(pram.name)
-    -- end
-    local name=pram.name
-    if pram.id=="toggle" then
-      name=string.upper(name).." >"
-    end
-    params:add{
-      type="control",
-      id=id,
-      name=name,
-      controlspec=controlspec.new(pram.min,pram.max,pram.exp and "exp" or "lin",pram.div,pram.default,pram.unit or "",pram.div/(pram.max-pram.min)),
-      formatter=pram.formatter,
-    }
-    params:set_action(id,function(x)
-      if pram.id=="toggle" then
-        engine.toggle(pram.stage,x)
-        -- update the hiding/showing in the menu
-        for stage=1,11 do
-          if params:get("toggle"..stage)==1 then
-            stages_toggled=stages_toggled+1
-          end
-          for _,p in ipairs(params_menu) do
-            if p.stage==stage then
-              if params:get("toggle"..p.stage)==0 and p.id~="toggle" then
-                params:hide(p.id..p.stage)
-              else
-                params:show(p.id..p.stage)
-              end
-            end
-          end
-        end
-        _menu.rebuild_params()
-      else
-        engine.set(pram.stage,pram.id,pram.val and pram.val(x) or x)
-      end
-    end)
-  end
-
-  params:bang()
-
-  clock.run(function()
-    while true do
-      clock.sleep(1/10)
-      redraw()
-    end
-  end)
+  
+  redraw()
 end
 
 function cleanup()
@@ -102,12 +58,37 @@ function enc(k,d)
   end
 end
 
+
+function update_circles()
+  local new_circles = {}
+  local toremove = {}
+  for i,c in ipairs(ggrid.circles) do 
+    c.r = c.r + 0.5
+    c.l = c.l - 30/200
+    screen.level(util.round(c.l))
+    screen.circle(util.round(c.x),util.round(c.y),util.round(c.r)) 
+    screen.fill()
+
+    if c.r < 64 and c.l>0.5 then
+      table.insert(new_circles,{x=c.x,y=c.y,r=c.r,l=c.l,visual=c.visual,rf=c.rd})
+    end
+  end
+  ggrid.circles = new_circles
+end
+
+function refresh()
+	redraw()
+end
+
 function redraw()
   if not installer:ready() then
     installer:redraw()
     do return end
   end
   screen.clear()
+  screen.blend_mode(2)
+
+  update_circles()
 
   screen.update()
 end
