@@ -18,6 +18,7 @@ BloomWildly {
 	var scale;
 	var patternDeath;
 	var scales;
+	var droneVolume;
 
 	*new {
 		arg argServer;
@@ -49,6 +50,7 @@ BloomWildly {
 		arg argServer;
 		var starting = 10000;
 		server = argServer;
+		droneVolume = 0.dbamp;
 
 		// initialize globals
 		numRecorders = 2;
@@ -79,13 +81,13 @@ BloomWildly {
 			var snd, env, oscfreq, output;
 			var lfo;
 			oscfreq = {freq * LFNoise2.kr(Rand(0.0001,0.5)).range(0.98, 1.02)}!10;
-			lfo = In.kr(lfoIn,10);
+			lfo = { SinOsc.kr({ 1/Rand(2,52) }!10) };
 			env = Env.adsr(8, 1, 0.9,4).kr(doneAction:2, gate: gate);
 			output = LFSaw.ar(oscfreq, mul: lfo.value.range(0,1));
 			output = Fold.ar(output,-0.5,0.5);
-			output = RLPF.ar(output, (env*freq*0.7) + (freq * lfo.value.range(0.1,2)), lfo.value.range(0.2,1));
+			output = RLPF.ar(output, (env*freq*0.7) + (freq * lfo.value.range(0.1,3)), lfo.value.range(0.2,1));
 			output = Splay.ar(output, lfo.value.range(0,1));
-			output = output * env * amp;
+			output = output * env * Lag.kr(amp,5);
 			Out.ar(0, output * 18.neg.dbamp);
 		}).send(server);
 
@@ -97,9 +99,6 @@ BloomWildly {
 			Out.kr(bus,LFNoise2.kr(freq));
 		}).send(server);
 
-		SynthDef("sinebass",{ arg bus=0;
-			Out.kr(bus,{ SinOsc.kr({ 1/Rand(2,52) }!10) });
-		}).send(server);
 
 		SynthDef.new("bell",	{
 			arg freq=440, rate=0.6, pan=0.0, amp=1.0, dur=1.0, lfor1=0.08, lfor2=0.05, nl=0.3, filt=5000, release=1;
@@ -123,7 +122,7 @@ BloomWildly {
 			DetectSilence.ar(snd,doneAction:2);
 			snd = LPF.ar(snd,400);
 			snd = Pan2.ar(snd,SinOsc.kr(1/Rand(2,5),mul:0.5));
-			Out.ar(0, snd * amp * 12.neg.dbamp);
+			Out.ar(0, snd * Lag.kr(amp,5) * 12.neg.dbamp);
 		}).send(server);
 
 		SynthDef("final",{
@@ -170,7 +169,6 @@ BloomWildly {
 		8.do({ arg i;
 			buses.put("mod"++i,Bus.control(server,1));
 		});
-		buses.put("basslfo",Bus.control(server,10));
 
 		// sync server
 		server.sync;
@@ -187,15 +185,16 @@ BloomWildly {
 			]));
 		});
 
-		syns.put("basslfo",Synth.head(server,"sinebass",[
-			bus:buses.at("basslfo")
-		]));
-
 		// starts the pattern recorderplayer
 		numRecorders.do({ arg i;
 			bloomRecorders[i].run();
 		});
 
+		syns.put("bass",Synth.after(syns.at("mod0"),"bass",[
+			freq: (60-12).midicps,
+			amp: 0.dbamp,
+		]));
+		NodeWatcher.register(syns.at("bass"));
 
 		// starts the drone
 		if (timerDrone.notNil,{
@@ -211,15 +210,7 @@ BloomWildly {
 						var note = [scale[0],scale[1]].choose.postln + noteRoot;
 						tickBetweenChordsDrone = ticksBetweenChords;
 						("[BloomWildly] playing bass").postln;
-						if (syns.at("bass").notNil,{
-							syns.at("bass").set(\gate,0);
-						});
-						syns.put("bass",Synth.after(syns.at("basslfo"),"bass",[
-							lfoIn: buses.at("basslfo"),
-							freq: (note-12).midicps,
-							amp: 6.dbamp,
-						]));
-						NodeWatcher.register(syns.at("bass"));
+						syns.at("bass").set(\freq,(note-12).midicps);
 					});
 					if (3.rand<starting, {
 						// stop old pad
@@ -230,7 +221,7 @@ BloomWildly {
 						syns.put("drone",Synth.after(syns.at("mod0"),"pad",[
 							modBus: buses.at("mod0"),
 							freq: (scale.choose.mod(12)+noteRoot+48).midicps,
-							amp: 6.neg.dbamp,
+							amp: 6.neg.dbamp * droneVolume.dbamp,
 						]));
 						NodeWatcher.register(syns.at("drone"));
 					});
@@ -242,51 +233,62 @@ BloomWildly {
 		})}.fork;
 
 
-/*		// starts the pad
+		/*		// starts the pad
 		if (timer.notNil,{
-			timer.stop;
+		timer.stop;
 		});
 		timer = { inf.do({
-			delta.wait;
-			tick = tick + 1;
-			if (tickBetweenChords>0,{
-				tickBetweenChords = tickBetweenChords - 1;
-				if (tickBetweenChords==0) {
-					var chord;
-					var drone = [scale[0],scale[1]].choose;
-					tickBetweenChords = ticksBetweenChords;
-					// next chord
-					chordNum = chordNum + 1;
-					chord = chords[chordNum.mod(chords.size)];
-					4.do({ arg i ;
-						("[BloomWildly] playing chord"+chord).postln;
-						if (i==0,{
-							if (syns.at("bass").notNil,{
-								syns.at("bass").set(\gate,0);
-							});
-							syns.put("bass",Synth.after(syns.at("mod"++i),"pad",[
-								modBus: buses.at("mod"++i),
-								freq: (chord[i]+drone+scale[0]-24).midicps,
-							]));
-							NodeWatcher.register(syns.at("bass"));
-						},{
-							// stop old pad
-							if (syns.at("pad"++i).notNil,{
-								syns.at("pad"++i).set(\gate,0);
-							});
-							syns.put("pad"++i,Synth.after(syns.at("mod"++i),"pad",[
-								modBus: buses.at("mod"++i),
-								freq: (chord[i]+scale[0]+noteRoot).midicps,
-								amp: 6.neg.dbamp,
-							]));
-							NodeWatcher.register(syns.at("pad"++i));
-						});
-					});
-				}
-			});
+		delta.wait;
+		tick = tick + 1;
+		if (tickBetweenChords>0,{
+		tickBetweenChords = tickBetweenChords - 1;
+		if (tickBetweenChords==0) {
+		var chord;
+		var drone = [scale[0],scale[1]].choose;
+		tickBetweenChords = ticksBetweenChords;
+		// next chord
+		chordNum = chordNum + 1;
+		chord = chords[chordNum.mod(chords.size)];
+		4.do({ arg i ;
+		("[BloomWildly] playing chord"+chord).postln;
+		if (i==0,{
+		if (syns.at("bass").notNil,{
+		syns.at("bass").set(\gate,0);
+		});
+		syns.put("bass",Synth.after(syns.at("mod"++i),"pad",[
+		modBus: buses.at("mod"++i),
+		freq: (chord[i]+drone+scale[0]-24).midicps,
+		]));
+		NodeWatcher.register(syns.at("bass"));
+		},{
+		// stop old pad
+		if (syns.at("pad"++i).notNil,{
+		syns.at("pad"++i).set(\gate,0);
+		});
+		syns.put("pad"++i,Synth.after(syns.at("mod"++i),"pad",[
+		modBus: buses.at("mod"++i),
+		freq: (chord[i]+scale[0]+noteRoot).midicps,
+		amp: 6.neg.dbamp,
+		]));
+		NodeWatcher.register(syns.at("pad"++i));
+		});
+		});
+		}
+		});
 		})}.fork;*/
 
 		"[BloomWildly] ready".postln;
+	}
+
+	setDroneVolume {
+		arg v;
+		droneVolume = v;
+		if (syns.at("drone").notNil,{
+			syns.at("drone").set(\amp,droneVolume.dbamp);
+		});
+		if (syns.at("bass").notNil,{
+			syns.at("bass").set(\amp,droneVolume.dbamp);
+		});
 	}
 
 	setSecondsBetweenRecordings {
