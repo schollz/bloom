@@ -3,6 +3,7 @@ BloomWildly {
 	var syns;
 	var buses;
 	var bloomSample;
+	var bloomSampleFolder;
 	var bloomRecorders;
 	var numRecorders;
 	var timer;
@@ -21,8 +22,8 @@ BloomWildly {
 	var droneVolume;
 
 	*new {
-		arg argServer;
-		^super.new.init(argServer);
+		arg argServer,argbloomSampleFolder;
+		^super.new.init(argServer,argbloomSampleFolder);
 	}
 
 	fnEmit {
@@ -34,14 +35,28 @@ BloomWildly {
 		idx = idx + (v[1]*10);
 		idx = idx.linlin(0,100,0,scale.size-2).round.asInteger;
 		note = scale[idx.mod(scale.size-2)+2];
-		note = note + noteRoot - 24;
+		note = note + noteRoot - 12;
 		if (patternI+1==patternN,{
 			release = 4;
 		});
 		noiserelease = release;
 		release = release * age.linlin(0,patternDeath,1,0.5);
 		("[BloomWildly] emit"+v+"age"+age+"pattern"+pattern+patternI+patternN).postln;
-		Synth.head(server,"bell",[\freq,(note+12).midicps,\amp,(age.linlin(0,patternDeath,0,-18).dbamp),\release,release,\noiserelease,noiserelease]);
+		bloomSample.noteOn(0,
+			bloomSampleFolder,
+			note,
+			12.neg.dbamp,
+			age.linlin(0,patternDeath,127,1),
+			0,
+			buses.at("acoustic").index,{
+				Synth.head(server,"bell",[
+					\out, buses.at("synthetic"),
+					\freq,(note).midicps,
+					\amp,(age.linlin(0,patternDeath,-12,-36).dbamp),
+					\release,release,
+					\noiserelease,noiserelease
+				]);
+		});
 		v = v.add(age);
 		NetAddr("127.0.0.1", 10111).sendMsg("/emit",*v);
 		if (age>patternDeath,{
@@ -50,9 +65,10 @@ BloomWildly {
 	}
 
 	init {
-		arg argServer;
+		arg argServer,argbloomSampleFolder;
 		var starting = 10000;
 		server = argServer;
+		bloomSampleFolder=argbloomSampleFolder;
 		droneVolume = 0.dbamp;
 
 		// initialize globals
@@ -91,7 +107,7 @@ BloomWildly {
 			output = RLPF.ar(output, (env*freq*0.7) + (freq * lfo.value.range(0.1,3)), lfo.value.range(0.2,1));
 			output = Splay.ar(output, lfo.value.range(0,1));
 			output = output * env * Lag.kr(amp,5);
-			Out.ar(0, output * 18.neg.dbamp);
+			Out.ar(0, output * 24.neg.dbamp);
 		}).send(server);
 
 		SynthDef("sine",{ arg bus=0,freq=10;
@@ -103,8 +119,14 @@ BloomWildly {
 		}).send(server);
 
 
+		SynthDef("blender",{ arg busA=0,busB=2,blend=0.2;
+			var sndA = In.ar(busA,2);
+			var sndB = In.ar(busB,2);
+			Out.ar(0,SelectX.ar(VarLag.kr(blend,1.618,warp:\sine),[sndA,sndB]));
+		}).send(server);
+
 		SynthDef.new("bell",	{
-			arg freq=440, rate=0.6, pan=0.0, amp=1.0, dur=1.0, lfor1=0.08, lfor2=0.05, nl=0.4, filt=5000, release=1, noiserelease=1;
+			arg out=0, freq=440, rate=0.6, pan=0.0, amp=1.0, dur=1.0, lfor1=0.08, lfor2=0.05, nl=0.5, filt=5000, release=1, noiserelease=1;
 			var sig, sub, lfo1, lfo2, env, noiseenv, noise;
 
 			lfo1  = SinOsc.kr(lfor1, 0.5, 1, 0);
@@ -116,7 +138,7 @@ BloomWildly {
 			sig   = (sig * env) +  noise;
 			sig   = MoogFF.ar(sig, 5000, 0, 0, 1, 0);
 			sig   = Pan2.ar(sig, pan, amp);
-			Out.ar(0, sig * 0.2);
+			Out.ar(out, sig * 6.neg.dbamp);
 		}).send(server);
 
 		SynthDef("pad",{ arg freq=440, amp = 0.5, gate = 1, modBus = 0;
@@ -126,7 +148,7 @@ BloomWildly {
 			DetectSilence.ar(snd,doneAction:2);
 			snd = LPF.ar(snd,400);
 			snd = Pan2.ar(snd,SinOsc.kr(1/Rand(2,5),mul:0.5));
-			Out.ar(0, snd * Lag.kr(amp,5) * 12.neg.dbamp);
+			Out.ar(0, snd * Lag.kr(amp,5) * 18.neg.dbamp);
 		}).send(server);
 
 		SynthDef("final",{
@@ -174,11 +196,20 @@ BloomWildly {
 			buses.put("mod"++i,Bus.control(server,1));
 		});
 
+		buses.put("synthetic",Bus.audio(server,2));
+		buses.put("acoustic",Bus.audio(server,2));
+
 		// sync server
 		server.sync;
 
 		// intialize final effects
 		syns.put("final",Synth.tail(server,"final",[]));
+
+		syns.put("blender",Synth.before(syns.at("final"),"blender",[
+			busA: buses.at("synthetic"),
+			busB: buses.at("acoustic"),
+			blend: 0.5,
+		]));
 
 		// intialize modulation
 		4.do({ arg i ;
@@ -215,7 +246,7 @@ BloomWildly {
 				tickBetweenChordsDrone = tickBetweenChordsDrone - 1;
 				if (tickBetweenChordsDrone==0) {
 					if (3.rand<starting,{
-						var note = [scale[0],scale[1]].choose.postln + noteRoot;
+						var note = [scale[0],scale[1]].choose + noteRoot;
 						tickBetweenChordsDrone = ticksBetweenChords;
 						("[BloomWildly] playing bass").postln;
 						syns.at("bass").set(\freq,(note-12).midicps);
@@ -324,6 +355,11 @@ BloomWildly {
 			("[BloomWildly] setting scale to "+v).postln;
 			scale = scales.at(v);
 		});
+	}
+
+	setBlend {
+		arg v;
+		syns.at("blender").set(\blend,v);
 	}
 
 	setRoot {

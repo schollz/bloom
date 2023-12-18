@@ -59,7 +59,25 @@ BloomSample {
 		allNumbers.put(folder,noteNumbers);
 		allRoundRobins.put(folder,noteRoundRobins);
 
-		SynthDef("playx2",{
+		SynthDef("playx21",{
+			arg out=0,pan=0,amp=2.0,
+			buf1,buf2,buf1mix=1,
+			t_trig=1,rate=1,
+			attack=0.01,decay=0.1,sustain=1.0,release=6,gate=1,
+			startPos=0;
+			var snd,snd2;
+			var frames1=BufFrames.ir(buf1);
+			var frames2=BufFrames.ir(buf2);
+			rate=rate*BufRateScale.ir(buf1);
+			snd=PlayBuf.ar(1,buf1,rate,t_trig,startPos:startPos*frames1,doneAction:Select.kr(frames1>frames2,[0,2]));
+			snd2=PlayBuf.ar(1,buf2,rate,t_trig,startPos:startPos*frames2,doneAction:Select.kr(frames2>frames1,[0,2]));
+			snd=(buf1mix*snd)+((1-buf1mix)*snd2);//SelectX.ar(buf1mix,[snd2,snd]);
+			snd=snd*EnvGen.ar(Env.adsr(attack,decay,sustain,release),gate,doneAction:2);
+			DetectSilence.ar(snd,0.001,doneAction:2);
+			snd=Pan2.ar(snd,pan,amp);
+			Out.ar(out,snd);
+		}).send(server);
+		SynthDef("playx22",{
 			arg out=0,pan=0,amp=2.0,
 			buf1,buf2,buf1mix=1,
 			t_trig=1,rate=1,
@@ -78,7 +96,7 @@ BloomSample {
 			Out.ar(out,snd);
 		}).send(server);
 
-		SynthDef("playx1",{
+		SynthDef("playx11",{
 			arg out=0,pan=0,amp=2.0,
 			buf1,buf2,buf1mix=1,
 			t_trig=1,rate=1,
@@ -86,20 +104,32 @@ BloomSample {
 			startPos=0;
 			var snd,snd2;
 			var frames1=BufFrames.ir(buf1);
-			var frames2=BufFrames.ir(buf2);
 			rate=rate*BufRateScale.ir(buf1);
-			snd=PlayBuf.ar(1,buf1,rate,t_trig,startPos:startPos*frames1,doneAction:Select.kr(frames1>frames2,[0,2]));
-			snd2=PlayBuf.ar(1,buf2,rate,t_trig,startPos:startPos*frames2,doneAction:Select.kr(frames2>frames1,[0,2]));
-			snd=SelectX.ar(buf1mix,[snd2,snd]);
+			snd=PlayBuf.ar(1,buf1,rate,t_trig,startPos:startPos*frames1,doneAction:2);
 			snd=snd*EnvGen.ar(Env.adsr(attack,decay,sustain,release),gate,doneAction:2);
 			DetectSilence.ar(snd,0.001,doneAction:2);
 			snd=Pan2.ar(snd,pan,amp);
 			Out.ar(out,snd);
 		}).send(server);
+		SynthDef("playx12",{
+			arg out=0,pan=0,amp=2.0,
+			buf1,buf2,buf1mix=1,
+			t_trig=1,rate=1,
+			attack=0.01,decay=0.1,sustain=1.0,release=6,gate=1,
+			startPos=0;
+			var snd,snd2;
+			var frames1=BufFrames.ir(buf1);
+			rate=rate*BufRateScale.ir(buf1);
+			snd=PlayBuf.ar(2,buf1,rate,t_trig,startPos:startPos*frames1,doneAction:2);
+			snd=snd*EnvGen.ar(Env.adsr(attack,decay,sustain,release),gate,doneAction:2);
+			DetectSilence.ar(snd,0.001,doneAction:2);
+			snd=Balance2.ar(snd[0],snd[1],pan,amp);
+			Out.ar(out,snd);
+		}).send(server);
 	}
 
 	doPlay {
-		arg id,note,amp,buf1,buf2,buf1mix,rate,attack=0;
+		arg numFiles,id,note,amp,buf1,buf2,buf1mix,rate,attack=0,busOut=0;
 		var notename=1000000.rand;
 		var node;
 		// [notename,note,amp,buf1,buf2,buf1mix,rate].postln;
@@ -111,8 +141,9 @@ BloomSample {
 				syns.at(id).at(note).set(\gate,0);
 			});
 		});
-		node=Synth.head(server,"playx"++buf1.numChannels,[
-			\out,0,
+		[buf1,buf2].postln;
+		node=Synth.head(server,"playx"++numFiles++buf1.numChannels,[
+			\out,busOut,
 			\amp,amp,
 			\buf1,buf1,
 			\buf2,buf2,
@@ -121,14 +152,16 @@ BloomSample {
 			\attack,attack,
 		]).onFree({
 			buf1.free;
-			buf2.free;
+			if (buf2.notNil,{
+				buf2.free;
+			});
 		});
 		syns.at(id).put(note,node);
 		NodeWatcher.register(node,true);
 	}
 
 	playSample {
-		arg id, folder, note, velocity, attack=0;
+		arg id, folder, note, amp, velocity, attack=0, busOut=0, fnPlay;
 		var noteDynamics = allDynamics.at(folder);
 		var noteRoundRobins = allRoundRobins.at(folder);
 		var noteNumbers = allNumbers.at(folder);
@@ -139,7 +172,6 @@ BloomSample {
 		var rate=1.0;
 		var rateLoaded=1.0;
 		var buf1mix=1.0;
-		var amp=1.0;
 		var file1,file2,fileLoaded;
 		var velIndex=0;
 		var velIndices;
@@ -174,7 +206,7 @@ BloomSample {
 		file2=noteClosest.asInteger.asString++".";
 		if (dyns<2,{
 			// simple playback using amp
-			amp=velocity/127.0;
+			amp=amp*velocity/127.0;
 			file1=file1++"1.1.";
 			file2=file2++"1.1.";
 			// add round robin
@@ -182,7 +214,7 @@ BloomSample {
 			file2=file2++(noteRoundRobins.at(noteClosest.asString++".1").rand+1).asString++".0.wav";
 		},{
 			var rr1,rr2;
-			amp=velocity/127.0/2+0.25;
+			amp=amp*velocity/127.0/2+0.25;
 			// gather the velocity indices that are available
 			// TODO: make this specific to a single note?
 			vels=[velIndices[velIndex],velIndices[velIndex+1]];
@@ -207,10 +239,22 @@ BloomSample {
 		});
 
 		// [file1,file2,amp,rate].postln;
+		if (file1==file2,{
+			Buffer.read(server,PathName(folder+/+file1).fullPath,action:{ arg b1;
+				this.doPlay(1,id,noteOriginal,amp,b1,nil,buf1mix,rate,attack,busOut);
+				if (fnPlay.notNil,{
+					fnPlay.();
+				});
+			});
+		},{
+			Buffer.read(server,PathName(folder+/+file1).fullPath,action:{ arg b1;
+				Buffer.read(server,PathName(folder+/+file2).fullPath,action:{ arg b2;
 
-		Buffer.read(server,PathName(folder+/+file1).fullPath,action:{ arg b1;
-			Buffer.read(server,PathName(folder+/+file2).fullPath,action:{ arg b2;
-				this.doPlay(id,noteOriginal,amp*2,b1,b2,buf1mix,rate,attack);
+					this.doPlay(2,id,noteOriginal,amp,b1,b2,buf1mix,rate,attack,busOut);
+					if (fnPlay.notNil,{
+						fnPlay.();
+					});
+				});
 			});
 		});
 
@@ -228,14 +272,14 @@ BloomSample {
 	}
 
 	noteOn {
-		arg id, folder, note, velocity,attack=0;
+		arg id, folder, note, amp, velocity,attack=0,busOut=0,fnPlay;
 
 
 		if (allNumbers.at(folder).isNil,{
 			this.loadFolder(folder);
 		});
 
-		this.playSample(id, folder, note, velocity, attack);
+		this.playSample(id, folder, note, amp, velocity, attack, busOut, fnPlay);
 	}
 
 	free {
