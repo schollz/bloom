@@ -74,7 +74,7 @@ function init()
     type="control",
     id="delay",
     name="delay",
-    controlspec=controlspec.new(0.1,10,"lin",0.1,3.7,"s",1/100),
+    controlspec=controlspec.new(0.1,10,"lin",0.1,3.1,"s",1/100),
     action=function(x) engine.setSecondsBetweenPatterns(x) end
   }
 
@@ -103,7 +103,7 @@ function init()
     "recording delay",-- name
     1,-- min
     10,-- max
-    2,-- default
+    2.6,-- default
     function(param) return string.format("%d sec",param:get()) end -- formatter
   )
   params:set_action("seconds_between",function(v)
