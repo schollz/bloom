@@ -2,7 +2,9 @@
 
 a loving reimaginging of [the "bloom" app](https://generativemusic.com/bloom.html), adapted for norns and SuperCollider.
 
-![Untitled](https://github.com/schollz/bloom/assets/6550035/a4e5e034-d2e8-4c8f-818e-63a1bcd03a80)
+![291158687-a4e5e034-d2e8-4c8f-818e-63a1bcd03a80(1)](https://github.com/schollz/bloom/assets/6550035/80491d3f-ab93-4419-8cb1-708088e3d5d5)
+
+
 
 this script aims to be a re-imagining of the original “bloom” app by Brian Eno and Peter Chilvers that was released in 2008. the major functionality persists: clicking on the grid / screen will create circles and sounds that grow and disappear. multiple touches will create sequences that also eventually fade away. the sounds belong to scales with alien names like "ambrette", "benzoin", "bergamot", "labdanum", "neroli", "orris", "tolu", "vetiver", and "ylang" - all which were painstakingly captured from the original app (`PARAMS > scale`). also, like the app, the norns script has an “evolve when idle” function (`PARAMS > evolve`), and toggles for automatic generation (`PARAMS > generate`) and randomization (`PARAMS > randomize`). 
 
