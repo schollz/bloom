@@ -111,7 +111,7 @@ BloomWildly {
 			output = Fold.ar(output,-0.5,0.5);
 			output = RLPF.ar(output, (env*freq*0.7) + (freq * lfo.value.range(0.1,3)), lfo.value.range(0.2,1));
 			output = Splay.ar(output, lfo.value.range(0,1));
-			output = output * env * Lag.kr(amp,5);
+			output = output * env * Lag.kr(amp,2);
 			Out.ar(0, output * 24.neg.dbamp);
 		}).send(server);
 
@@ -128,7 +128,7 @@ BloomWildly {
 			var snd, snd2;
 			var sndA = In.ar(busA,2);
 			var sndB = In.ar(busB,2);
-			snd = SelectX.ar(VarLag.kr(blend,1.618,warp:\sine),[sndA,sndB]);
+			snd = SelectX.ar(VarLag.kr(blend,0.3,warp:\sine),[sndA,sndB]);
 			snd2=snd;
 			snd2 = DelayN.ar(snd, 0.03, 0.03);
 			snd2 = snd2 + PitchShift.ar(snd, 0.13, 2,0,1,1*shimmer/3);
@@ -161,7 +161,7 @@ BloomWildly {
 			DetectSilence.ar(snd,doneAction:2);
 			snd = LPF.ar(snd,400);
 			snd = Pan2.ar(snd,SinOsc.kr(1/Rand(2,5),mul:0.5));
-			Out.ar(0, snd * Lag.kr(amp,5) * 20.neg.dbamp);
+			Out.ar(0, snd * Lag.kr(amp,1) * 20.neg.dbamp);
 		}).send(server);
 
 		SynthDef("final",{
@@ -180,7 +180,7 @@ BloomWildly {
 			snd = snd * EnvGen.ar(Env.adsr(3,1,1,1));
 			snd = HPF.ar(snd,30);
 			snd = LPF.ar(snd,12000);
-			ReplaceOut.ar(0,snd * Lag.kr(\db.kr(0),30).dbamp);
+			ReplaceOut.ar(0,snd * Lag.kr(\db.kr(0),3).dbamp);
 		}).send(server);
 
 		// initialize scales
