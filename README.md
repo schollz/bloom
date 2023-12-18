@@ -12,12 +12,19 @@ a loving reimaginging of [Brian Eno's "bloom" app](https://generativemusic.com/b
 
 ## documentation
 
+### on the norns
+
 - E1: change scale
 - E2: change delay
 - E3: change blend
 - K2: clear pattern
 - K3: generate pattern 
 
+in the parameters there are also options for outputs (midi, crow), sound design parameters, and parameters for generating/randomizing/evolving as per the original app.
+
+### supercollider
+
+without a norns, you can also run bloom with SuperCollider + a grid. just open `ignore/runWithGrid.scd` and follow the instructions and run.
 
 ## Install
 
