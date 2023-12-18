@@ -1,5 +1,6 @@
-// before runningmake sure to
-// start grid osc utility by running
+// 1. before running make sure to
+// copy all the lib/Bloom* files into `~/.local/share/SuperCollider/Extensions/`
+// 2. start grid osc utility by running
 //
 // serialoscd
 //
@@ -14,7 +15,7 @@ s.waitForBoot({
 	var draw, timer, cols = 16, rows = 8;
 	var syn;
 
-	~bloom = BloomWildly(Server.default,"~/Documents/bloom/samples/kalimba_small");
+	~bloom = BloomWildly(Server.default,thisProcess.nowExecutingPath.dirname++"../samples/kalimba_small");
 
 	MonomeGrid.setAddCallback({
 		arg serial, port, prefix;
