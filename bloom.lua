@@ -24,6 +24,7 @@ debounce_blend = 0
 debounce_scale = 0
 CURSOR_DEBOUNCE=150
 cursor={x=64,y=32,r=1,angle=180,moved=CURSOR_DEBOUNCE,show=false}
+time_since_last_note = 0
 
 options = {}
 options.OUT = { "none", "midi", "crow out 1+2", "crow ii JF", "crow ii 301"}
@@ -106,6 +107,7 @@ function init()
 
   params:add_option("generate","generate",{"off","on"},1)
   params:add_option("randomize","randomize",{"off","on"},1)
+  params:add_option("evolve","evolve when idle",{"off","on"},2)
 
   bloom_scales={
     "ambrette",
@@ -204,6 +206,7 @@ function init()
   clock.run(function()
     while true do
       clock.sleep(1)
+      time_since_last_note = time_since_last_note + 1
       if params:get("randomize")==2 then
         if math.random(1,100)<10 then
           params:set("scale",math.random(1,#bloom_scales))
@@ -215,12 +218,16 @@ function init()
           params:set("blend",math.random(0,100)/100)
         end
       end
+      if time_since_last_note>1 and params:get("evolve")==2 and params:get("generate")==1 then 
+        print("[bloom] evolving on")
+        params:set("generate",2)
+      end
       if params:get("generate")==2 then
         if generate_debounce>0 then
           generate_debounce=generate_debounce-1
         end
-        if generate_debounce==0 and math.random(1,100)<10 then
-          print("generating")
+        if (generate_debounce==0 and math.random(1,100)<10) or time_since_last_note>16 then
+          print("[bloom] generating")
           local num_positions=math.random(3,10)
           for i=1,num_positions do
             local x=math.random(1,128)/128
@@ -228,9 +235,9 @@ function init()
             print(i,x,y)
             engine.record(x,y)
             add_circle({x=x*128,y=y*64,r=0,l=15})
-            clock.sleep(math.random(10,1000)/1000)
+            clock.sleep(math.random(100,params:get("seconds_between")*1000)/1000)
           end
-          generate_debounce=math.random(3,10)
+          generate_debounce=math.random(6,23)
         end
       end
     end
@@ -248,6 +255,9 @@ end
 
 function do_note(note_num,velocity,on)
   print(note,velocity,on)
+  if on then 
+    time_since_last_note = 0
+  end
   if params:get("out") == 2 then
     if on then 
       midi_device:note_on(note_num, velocity, midi_channel)
