@@ -122,6 +122,14 @@ function init()
 
   params:bang()
   redraw()
+  
+  
+  clock.run(function()
+    while true do 
+      clock.sleep(1/60)
+      update_circles()
+    end
+  end)
 
   local generate_debounce=10
   clock.run(function()
@@ -195,9 +203,6 @@ function update_circles()
   for i,c in ipairs(ggrid.circles) do
     c.r=c.r+0.35
     c.l=c.l-(c.l/52)
-    screen.level(util.round(c.l))
-    screen.circle(util.round(c.x),util.round(c.y),util.round(c.r))
-    screen.fill()
 
     if c.r<100 and c.l>0.002 then
       table.insert(new_circles,{x=c.x,y=c.y,r=c.r,l=c.l,visual=c.visual,rf=c.rd})
@@ -214,13 +219,18 @@ function redraw()
   screen.clear()
   screen.blend_mode(2)
 
-  update_circles()
-
   if cursor.show then
     screen.move(cursor.x,cursor.y)
     screen.level(util.linlin(0,CURSOR_DEBOUNCE,0,15,cursor.moved))
     screen.text_center("+")
   end
+
+  for i,c in ipairs(ggrid.circles) do
+    screen.level(util.round(c.l))
+    screen.circle(util.round(c.x),util.round(c.y),util.round(c.r))
+    screen.fill()
+  end
+
 
   screen.level(5)
   screen.move(2,8)

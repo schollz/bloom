@@ -35,7 +35,7 @@ function GGrid:new(args)
 
   -- grid refreshing
   m.grid_refresh=metro.init()
-  m.grid_refresh.time=0.025
+  m.grid_refresh.time=1/60
   m.grid_refresh.event=function()
     if m.grid_on then
       m:grid_redraw()
@@ -70,7 +70,7 @@ function GGrid:get_visual()
   for row=1,self.rows do
     for col=1,self.cols do
       if self.visual[row][col]>0 then
-        self.visual[row][col]=self.visual[row][col]-self.visual[row][col]/50
+        self.visual[row][col]=self.visual[row][col]-self.visual[row][col]/80
         if self.visual[row][col]<0 then
           self.visual[row][col]=0
         end
