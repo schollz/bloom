@@ -28,17 +28,7 @@ without a norns, you can also run bloom with SuperCollider + a grid. just open `
 
 ## Install
 
-first you need to have [tapedeck](https://github.com/schollz/tapedeck) installed.
-
-install with
-
-```
-;install https://github.com/schollz/tapedeck
-```
-
-and then run the script to download the remaining libraries.
-
-now you can install bloom:
+you can install through maiden:
 
 ```
 ;install https://github.com/schollz/bloom

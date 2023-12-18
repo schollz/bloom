@@ -17,7 +17,10 @@
 musicutil=require("musicutil")
 ggrid_=include("lib/ggrid")
 halfsecond=include("lib/halfsecond")
-engine.name="Bloom"
+installer_=include("lib/scinstaller/scinstaller")
+installer=installer_:new{requirements={"Fverb"},zip="https://github.com/schollz/portedplugins/releases/download/v0.4.5/PortedPlugins-RaspberryPi.zip"}
+engine.name=installer:ready() and 'Bloom' or nil
+
 
 debounce_delay = 0
 debounce_blend = 0
@@ -37,6 +40,16 @@ function add_circle(c)
 end
 
 function init()
+  if not installer:ready() then
+    clock.run(function()
+      while true do
+        redraw()
+        clock.sleep(1/5)
+      end
+    end)
+    do return end
+  end
+
   ggrid=ggrid_:new{add_circle=add_circle}
   ggrid.circles={
     {x=64,y=32,r=1,l=15},
@@ -210,7 +223,6 @@ function init()
   params:bang()
   redraw()
   
-  
   clock.run(function()
     while true do 
       clock.sleep(1/60)
@@ -303,6 +315,9 @@ function do_note(note_num,velocity,on)
 end
 
 function enc(k,d)
+  if not installer:ready() then
+    do return end
+  end
   if k==1 then
     params:delta("scale",d)
   elseif k==2 then 
@@ -313,6 +328,10 @@ function enc(k,d)
 end
 
 function key(k,z)
+  if not installer:ready() then
+    installer:key(k,z)
+    do return end
+  end
   if k==3 and z==1 then
     cursor.x=math.random(1,128)
     cursor.y=math.random(1,64)
@@ -345,6 +364,10 @@ function refresh()
 end
 
 function redraw()
+  if not installer:ready() then
+    installer:redraw()
+    do return end
+  end
   screen.clear()
   screen.blend_mode(2)
 
