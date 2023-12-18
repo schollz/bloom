@@ -97,18 +97,17 @@ function init()
   params:set_action("duration",function(v)
     engine.setPatternDuration(params:get("duration"))
   end)
-
-  params:add_number(
-    "seconds_between",-- id
-    "recording delay",-- name
-    1,-- min
-    10,-- max
-    3,-- default
-    function(param) return string.format("%d sec",param:get()) end -- formatter
-  )
-  params:set_action("seconds_between",function(v)
+ 
+  params:add{
+    type="control",
+    id="seconds_between",
+    name="recording delay",
+    controlspec=controlspec.new(1,10,"lin",0.1,2.1,"sec",0.1/10),
+    action=function(x)
     engine.setSecondsBetweenRecordings(params:get("seconds_between"))
-  end)
+    end
+  }
+
   params:add_number(
     "drone_volume",-- id
     "drone volume",-- name
