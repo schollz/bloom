@@ -125,6 +125,13 @@ BloomRecord {
 		patternHistory.put(pattern,nil);
 	}
 
+	removeAll {
+		("[BloomRecord] removed all patterns").postln;
+		patternHistory = Dictionary.new();
+		patternHistoryIterator = 0;
+		isPlaying = false;
+	}
+
 	free {
 		if (timer.notNil,{
 			timer.stop;

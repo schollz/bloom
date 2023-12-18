@@ -39,6 +39,9 @@ Engine_Bloom : CroneEngine {
         this.addCommand("setBlend","f",{ arg msg;
             bloom.setBlend(msg[1]);
         });
+        this.addCommand("removeAll","",{ arg msg;
+            bloom.removeAll();
+        });
 
     }
 

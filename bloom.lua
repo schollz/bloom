@@ -1,4 +1,4 @@
--- bloom v0.0.1
+-- bloom v1.0.0
 -- (adapted from Eno)
 --
 -- llllllll.co/t/bloom
@@ -8,8 +8,10 @@
 --    ▼ instructions below ▼
 --
 -- E1: change scale
--- K2: toggle rand/generate
--- K3: generate a new pattern
+-- E2: change delay
+-- E3: change blend
+-- K2: clear pattern
+-- K3: generate pattern 
 --
 
 musicutil=require("musicutil")
@@ -17,6 +19,9 @@ ggrid_=include("lib/ggrid")
 halfsecond=include("lib/halfsecond")
 engine.name="Bloom"
 
+debounce_delay = 0
+debounce_blend = 0
+debounce_scale = 0
 CURSOR_DEBOUNCE=150
 cursor={x=64,y=32,r=1,angle=180,moved=CURSOR_DEBOUNCE,show=false}
 
@@ -68,6 +73,7 @@ function init()
   params:add_option("scale","scale",bloom_scales,6)
   params:set_action("scale",function(v)
     engine.setScale(params:string("scale"))
+    debounce_scale = 180
   end)
 
   params:add{
@@ -75,7 +81,10 @@ function init()
     id="delay",
     name="delay",
     controlspec=controlspec.new(0.1,10,"lin",0.1,3.1,"s",1/100),
-    action=function(x) engine.setSecondsBetweenPatterns(x) end
+    action=function(x) 
+      debounce_delay = 180
+      engine.setSecondsBetweenPatterns(x) 
+    end
   }
 
   params:add{
@@ -83,7 +92,10 @@ function init()
     id="blend",
     name="blend",
     controlspec=controlspec.new(0,1,"lin",0.01,0.02,"",0.01/1),
-    action=function(x) engine.setBlend(x) end
+    action=function(x) 
+      engine.setBlend(x)
+      debounce_blend = 180
+     end
   }
 
   params:add_number(
@@ -128,6 +140,15 @@ function init()
     while true do 
       clock.sleep(1/60)
       update_circles()
+      if debounce_blend>0 then 
+        debounce_blend = debounce_blend - 1
+      end
+      if debounce_scale>0 then 
+        debounce_scale = debounce_scale - 1
+      end
+      if debounce_delay>0 then 
+        debounce_delay = debounce_delay - 1
+      end
     end
   end)
 
@@ -171,6 +192,10 @@ end
 function enc(k,d)
   if k==1 then
     params:delta("scale",d)
+  elseif k==2 then 
+    params:delta("delay",d)
+  elseif k==3 then 
+    params:delta("blend",d)
   end
 end
 
@@ -183,19 +208,10 @@ function key(k,z)
     engine.record(x,y)
     add_circle({x=x*128,y=y*64,r=0,l=15})
   elseif k==2 and z==1 then
-    if params:get("randomize")==2 then
-      if params:get("generate")==2 then
-        params:set("randomize",1)
-      else
-        params:set("generate",2)
-      end
-    elseif params:get("generate")==2 then
-      params:set("generate",1)
-    else
-      params:set("randomize",2)
-    end
+    engine.removeAll()
   end
 end
+
 
 function update_circles()
   local new_circles={}
@@ -232,18 +248,44 @@ function redraw()
   end
 
 
-  screen.level(5)
-  screen.move(2,8)
-  screen.text(params:string("scale"))
-  screen.move(128,8)
-  if params:get("generate")==2 then
-    if params:get("randomize")==2 then
-      screen.text_right("generate+randomize")
-    else
-      screen.text_right("generate")
-    end
-  elseif params:get("randomize")==2 then
-    screen.text_right("randomize")
+  if debounce_delay>0 then 
+    screen.level(util.round(debounce_delay/180*15))
+    screen.move(1,54-18)
+    screen.text("delay")
+    screen.move(0,60-18)
+    screen.line(128,60-18)
+    screen.stroke()
+    screen.move(0,61-18)
+    screen.line(128,61-18)
+    screen.stroke()
+    screen.move(params:get("delay")*128/10,56-18)
+    screen.line(params:get("delay")*128/10,64-18)
+    screen.move(params:get("delay")*128/10+1,56-18)
+    screen.line(params:get("delay")*128/10+1,64-18)
+    screen.stroke()
+  end
+  if debounce_blend>0 then 
+    screen.level(util.round(debounce_blend/180*15))
+    screen.move(1,54)
+    screen.text("blend")
+    screen.move(0,60)
+    screen.line(128,60)
+    screen.stroke()
+    screen.move(0,61)
+    screen.line(128,61)
+    screen.stroke()
+    screen.move(params:get("blend")*128,56)
+    screen.line(params:get("blend")*128,64)
+    screen.move(params:get("blend")*128+1,56)
+    screen.line(params:get("blend")*128+1,64)
+    screen.stroke()
+  end
+
+  if (debounce_scale>0) then 
+    screen.level(util.round(debounce_scale/180*15))
+    screen.move(2,8)
+    screen.text(params:string("scale"))
+    screen.move(128,8)
   end
 
   screen.update()

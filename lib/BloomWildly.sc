@@ -349,6 +349,12 @@ BloomWildly {
 		patternDeath = v;
 	}
 
+	removeAll {
+		numRecorders.do({arg i;
+			bloomRecorders[i].removeAll();
+		});
+	}
+
 	setScale {
 		arg v;
 		if (scales.at(v).notNil,{
