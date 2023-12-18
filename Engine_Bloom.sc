@@ -18,8 +18,8 @@ Engine_Bloom : CroneEngine {
 
         bloom = BloomWildly(server,"/home/we/dust/code/bloom/samples/kalimba_small");
 
-        this.addCommand("record","ff",{ arg msg;
-            bloom.record(0,[msg[1],msg[2]]);
+        this.addCommand("record","iff",{ arg msg;
+            bloom.record(msg[1],[msg[2],msg[3]]);
         });
         this.addCommand("setScale","s",{ arg msg;
             bloom.setScale(msg[1].asString);

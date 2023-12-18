@@ -77,7 +77,7 @@ BloomWildly {
 		droneVolume = 3.neg.dbamp;
 
 		// initialize globals
-		numRecorders = 2;
+		numRecorders = 8;
 		patternDeath = 60;
 		delta = 0.1;
 		ticksBetweenChords = 12 / delta; // 4 seconds
@@ -394,9 +394,10 @@ BloomWildly {
 
 	record {
 		arg i,v;
-		var note = scale[v.mod(16)+2]+noteRoot;
-		bloomRecorders[i].record(v, { arg pattern, v, age, patternI, patternN;
-			this.fnEmit(i, pattern, v, age, patternI, patternN);
+		if (i<numRecorders,{
+			bloomRecorders[i].record(v, { arg pattern, v, age, patternI, patternN;
+				this.fnEmit(i, pattern, v, age, patternI, patternN);
+			});
 		});
 	}
 

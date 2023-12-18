@@ -58,9 +58,11 @@ function GGrid:key_press(row,col,on)
     self.pressed_buttons[row..","..col]=nil
   end
   if on then
-    local x=col/self.cols
-    local y=row/self.rows
-    engine.record(x,y)
+    local x=col/self.cols-0.001
+    local y=row/self.rows-0.001
+    local recorder=math.ceil(params:get("recorders")*y)-1
+    y=(y*params:get("recorders"))-math.floor(y*params:get("recorders"))
+    engine.record(recorder,x,y)
     self.add_circle({x=x*128,y=y*64,r=0,l=15})
   end
 end
