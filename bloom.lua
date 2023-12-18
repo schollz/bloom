@@ -25,6 +25,12 @@ debounce_scale = 0
 CURSOR_DEBOUNCE=150
 cursor={x=64,y=32,r=1,angle=180,moved=CURSOR_DEBOUNCE,show=false}
 
+options = {}
+options.OUT = { "none", "midi", "crow out 1+2", "crow ii JF", "crow ii 301"}
+local midi_devices
+local midi_device
+local midi_channel
+local active_notes = {}
 function add_circle(c)
   table.insert(ggrid.circles,c)
 end
@@ -36,6 +42,13 @@ function init()
   }
   halfsecond.init()
 
+  midi_devices = {}
+  for i = 1,#midi.vports do
+    local long_name = midi.vports[i].name
+    local short_name = string.len(long_name) > 15 and util.acronym(long_name) or long_name
+    table.insert(midi_devices,i..": "..short_name)
+  end
+
   -- setup osc
   osc_fun={
     emit=function(args)
@@ -44,6 +57,16 @@ function init()
       local l=util.linlin(0,180,15,1,tonumber(args[#args]))
       add_circle({x=x*128,y=y*64,r=0,l=l})
     end,
+    note_on_norns=function(args)
+      do_note(
+        args[1],
+        args[2],
+        true
+      )
+    end,
+    note_off_norns=function(args)
+      do_note(args[1],0,false)
+    end
   }
   osc.event=function(path,args,from)
     if string.sub(path,1,1)=="/" then
@@ -55,6 +78,31 @@ function init()
       -- print("osc.event: '"..path.."' ?")
     end
   end
+
+  params:add_separator("BLOOM")
+  
+  params:add_group("outs",3)
+  params:add{type = "option", id = "out", name = "out",
+    options = options.OUT,
+    action = function(value)
+      all_notes_off()
+      if value == 3 then crow.output[2].action = "{to(5,0),to(0,0.25)}"
+      elseif value == 4 or value == 5 then
+        crow.ii.pullup(true)
+        crow.ii.jf.mode(1)
+      end
+    end}
+  params:add{type = "option", id = "midi_device", name = "midi out device",
+    options = midi_devices, default = 1,
+    action = function(value) midi_device = midi.connect(value) end}
+  
+  params:add{type = "number", id = "midi_out_channel", name = "midi out channel",
+    min = 1, max = 16, default = 1,
+    action = function(value)
+      all_notes_off()
+      midi_channel = value
+    end}
+
 
   params:add_option("generate","generate",{"off","on"},1)
   params:add_option("randomize","randomize",{"off","on"},1)
@@ -91,9 +139,9 @@ function init()
     type="control",
     id="blend",
     name="blend",
-    controlspec=controlspec.new(0,1,"lin",0.01,0.02,"",0.01/1),
+    controlspec=controlspec.new(0,100,"lin",1,2,"%",1/100),
     action=function(x) 
-      engine.setBlend(x)
+      engine.setBlend(x/100)
       debounce_blend = 180
      end
   }
@@ -189,6 +237,37 @@ function init()
   end)
 end
 
+function all_notes_off()
+  if params:get("out") == 2 then
+    for _, a in pairs(active_notes) do
+      midi_device:note_off(a, nil, midi_channel)
+    end
+  end
+  active_notes = {}
+end
+
+function do_note(note_num,velocity,on)
+  print(note,velocity,on)
+  if params:get("out") == 2 then
+    if on then 
+      midi_device:note_on(note_num, velocity, midi_channel)
+      table.insert(active_notes, note_num)
+    else
+      midi_device:note_off(note_num, nil, midi_channel)
+    end
+
+  elseif params:get("out") == 3 and on then
+    crow.output[1].volts = (note_num-60)/12
+    crow.output[2].execute()
+  elseif params:get("out") == 4 and on then
+    crow.ii.jf.play_note((note_num-60)/12,5)
+  elseif params:get("out") == 5 and on then -- er301
+    crow.ii.er301.cv(1, (note_num-60)/12)
+    crow.ii.er301.tr_pulse(1)
+  end
+
+end
+
 function enc(k,d)
   if k==1 then
     params:delta("scale",d)
@@ -251,7 +330,7 @@ function redraw()
   if debounce_delay>0 then 
     screen.level(util.round(debounce_delay/180*15))
     screen.move(1,54-18)
-    screen.text("delay")
+    screen.text("delay "..params:string("delay"))
     screen.move(0,60-18)
     screen.line(128,60-18)
     screen.stroke()
@@ -267,24 +346,24 @@ function redraw()
   if debounce_blend>0 then 
     screen.level(util.round(debounce_blend/180*15))
     screen.move(1,54)
-    screen.text("blend")
+    screen.text("blend "..params:string("blend"))
     screen.move(0,60)
     screen.line(128,60)
     screen.stroke()
     screen.move(0,61)
     screen.line(128,61)
     screen.stroke()
-    screen.move(params:get("blend")*128,56)
-    screen.line(params:get("blend")*128,64)
-    screen.move(params:get("blend")*128+1,56)
-    screen.line(params:get("blend")*128+1,64)
+    screen.move(params:get("blend")*1.28,56)
+    screen.line(params:get("blend")*1.28,64)
+    screen.move(params:get("blend")*1.28+1,56)
+    screen.line(params:get("blend")*1.28+1,64)
     screen.stroke()
   end
 
   if (debounce_scale>0) then 
     screen.level(util.round(debounce_scale/180*15))
     screen.move(2,8)
-    screen.text(params:string("scale"))
+    screen.text("scale: "..params:string("scale"))
     screen.move(128,8)
   end
 

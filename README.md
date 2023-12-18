@@ -16,6 +16,7 @@
 - K2: clear pattern
 - K3: generate pattern 
 
+
 ## Install
 
 first you need to have [tapedeck](https://github.com/schollz/tapedeck) installed.

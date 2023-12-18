@@ -20,6 +20,7 @@ BloomWildly {
 	var patternDeath;
 	var scales;
 	var droneVolume;
+	var oscs;
 
 	*new {
 		arg argServer,argbloomSampleFolder;
@@ -48,6 +49,7 @@ BloomWildly {
 			12.neg.dbamp,
 			age.linlin(0,patternDeath,127,1),
 			0,
+			NetAddr("127.0.0.1", 10111).sendMsg("/note_on_norns",note,age.linlin(0,patternDeath,127,1).round.asInteger);
 			buses.at("acoustic").index,{
 				Synth.head(server,"bell",[
 					\out, buses.at("synthetic"),
@@ -55,7 +57,10 @@ BloomWildly {
 					\amp,(age.linlin(0,patternDeath,-12,-36).dbamp),
 					\release,release,
 					\noiserelease,noiserelease
-				]);
+				]).onFree({
+					NetAddr("127.0.0.1", 10111).sendMsg("/note_off_norns",note);
+				});
+
 		});
 		v = v.add(age);
 		NetAddr("127.0.0.1", 10111).sendMsg("/emit",*v);
