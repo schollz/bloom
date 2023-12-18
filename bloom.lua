@@ -216,11 +216,15 @@ function init()
         end
       }
 
+      local num_recorders_max=8
+      if ggrid~=nil and ggrid.rows~=nil then
+        num_recorders_max=ggrid.rows
+      end
       params:add_number(
         "recorders",-- id
         "lanes",-- name
         1,-- min
-        8,-- max
+        num_recorders_max,-- max
         1,-- default
       )
 
