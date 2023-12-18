@@ -74,7 +74,7 @@ BloomWildly {
 		var starting = 10000;
 		server = argServer;
 		bloomSampleFolder=argbloomSampleFolder;
-		droneVolume = 0.dbamp;
+		droneVolume = 3.neg.dbamp;
 
 		// initialize globals
 		numRecorders = 2;
@@ -244,7 +244,7 @@ BloomWildly {
 			server.sync;
 			syns.put("bass",Synth.after(syns.at("mod0"),"bass",[
 				freq: (60-12).midicps,
-				amp: 12.dbamp,
+				amp: droneVolume.dbamp,
 			]));
 			NodeWatcher.register(syns.at("bass"));
 		}.play;
@@ -274,7 +274,7 @@ BloomWildly {
 						syns.put("drone",Synth.after(syns.at("mod0"),"pad",[
 							modBus: buses.at("mod0"),
 							freq: (scale.choose.mod(12)+noteRoot+48).midicps,
-							amp: 6.neg.dbamp * droneVolume.dbamp,
+							amp: droneVolume.dbamp,
 						]));
 						NodeWatcher.register(syns.at("drone"));
 					});
