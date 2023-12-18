@@ -103,7 +103,7 @@ function init()
     "recording delay",-- name
     1,-- min
     10,-- max
-    2.6,-- default
+    3,-- default
     function(param) return string.format("%d sec",param:get()) end -- formatter
   )
   params:set_action("seconds_between",function(v)
