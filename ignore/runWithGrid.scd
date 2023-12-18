@@ -91,3 +91,4 @@ s.waitForBoot({
 )
 
 
+~bloom.setBlend(1)
