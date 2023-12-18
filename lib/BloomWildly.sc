@@ -122,11 +122,11 @@ BloomWildly {
 		SynthDef("blender",{ arg busA=0,busB=2,blend=0.2;
 			var sndA = In.ar(busA,2);
 			var sndB = In.ar(busB,2);
-			Out.ar(0,SelectX.ar(VarLag.kr(blend,1.618*4,warp:\sine),[sndA,sndB]));
+			Out.ar(0,SelectX.ar(VarLag.kr(blend,1.618,warp:\sine),[sndA,sndB]));
 		}).send(server);
 
 		SynthDef.new("bell",	{
-			arg out=0, freq=440, rate=0.6, pan=0.0, amp=1.0, dur=1.0, lfor1=0.08, lfor2=0.05, nl=0.4, filt=5000, release=1, noiserelease=1;
+			arg out=0, freq=440, rate=0.6, pan=0.0, amp=1.0, dur=1.0, lfor1=0.08, lfor2=0.05, nl=0.5, filt=5000, release=1, noiserelease=1;
 			var sig, sub, lfo1, lfo2, env, noiseenv, noise;
 
 			lfo1  = SinOsc.kr(lfor1, 0.5, 1, 0);

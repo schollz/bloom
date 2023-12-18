@@ -14,6 +14,7 @@
 
 musicutil=require("musicutil")
 ggrid_=include("lib/ggrid")
+halfsecond=include("lib/halfsecond")
 engine.name="Bloom"
 
 CURSOR_DEBOUNCE=150
@@ -28,6 +29,7 @@ function init()
   ggrid.circles={
     {x=64,y=32,r=1,l=15},
   }
+  halfsecond.init()
 
   -- setup osc
   osc_fun={
@@ -80,7 +82,7 @@ function init()
     type="control",
     id="blend",
     name="blend",
-    controlspec=controlspec.new(0,1,"lin",0.01,0.1,"s",1/1000),
+    controlspec=controlspec.new(0,1,"lin",0.01,0.02,"",0.01/1),
     action=function(x) engine.setBlend(x) end
   }
 
@@ -132,6 +134,9 @@ function init()
         end
         if math.random(1,100)<10 then
           params:set("delay",math.random(20,60)/10)
+        end
+        if math.random(1,100)<10 then
+          params:set("blend",math.random(0,100)/100)
         end
       end
       if params:get("generate")==2 then
@@ -195,7 +200,7 @@ function update_circles()
     screen.circle(util.round(c.x),util.round(c.y),util.round(c.r))
     screen.fill()
 
-    if c.r<80 and c.l>0.25 then
+    if c.r<100 and c.l>0.002 then
       table.insert(new_circles,{x=c.x,y=c.y,r=c.r,l=c.l,visual=c.visual,rf=c.rd})
     end
   end
