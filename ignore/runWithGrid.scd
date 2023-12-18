@@ -14,7 +14,7 @@ s.waitForBoot({
 	var draw, timer, cols = 16, rows = 8;
 	var syn;
 
-	~bloom = BloomWildly(Server.default);
+	~bloom = BloomWildly(Server.default,"~/Documents/bloom/samples/kalimba_small");
 
 	MonomeGrid.setAddCallback({
 		arg serial, port, prefix;

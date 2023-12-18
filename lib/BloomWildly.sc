@@ -3,6 +3,7 @@ BloomWildly {
 	var syns;
 	var buses;
 	var bloomSample;
+	var bloomSampleFolder;
 	var bloomRecorders;
 	var numRecorders;
 	var timer;
@@ -21,8 +22,8 @@ BloomWildly {
 	var droneVolume;
 
 	*new {
-		arg argServer;
-		^super.new.init(argServer);
+		arg argServer,argbloomSampleFolder;
+		^super.new.init(argServer,argbloomSampleFolder);
 	}
 
 	fnEmit {
@@ -42,7 +43,7 @@ BloomWildly {
 		release = release * age.linlin(0,patternDeath,1,0.5);
 		("[BloomWildly] emit"+v+"age"+age+"pattern"+pattern+patternI+patternN).postln;
 		bloomSample.noteOn(0,
-			"/home/zns/Documents/bloom/samples/kalimba_small",
+			bloomSampleFolder,
 			note,
 			12.neg.dbamp,
 			age.linlin(0,patternDeath,127,1),
@@ -64,9 +65,10 @@ BloomWildly {
 	}
 
 	init {
-		arg argServer;
+		arg argServer,argbloomSampleFolder;
 		var starting = 10000;
 		server = argServer;
+		bloomSampleFolder=argbloomSampleFolder;
 		droneVolume = 0.dbamp;
 
 		// initialize globals

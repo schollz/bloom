@@ -52,7 +52,6 @@ function init()
   params:add_option("generate","generate",{"off","on"},1)
   params:add_option("randomize","randomize",{"off","on"},1)
 
-
   bloom_scales={
     "ambrette",
     "benzoin",
@@ -68,13 +67,21 @@ function init()
   params:set_action("scale",function(v)
     engine.setScale(params:string("scale"))
   end)
-    
+
   params:add{
-    type = "control",
-    id = "delay",
-    name = "delay",
-    controlspec = controlspec.new(0.1, 10, "lin", 0.1, 3.7, "s",1/100),
-    action = function(x) engine.setSecondsBetweenPatterns(x) end
+    type="control",
+    id="delay",
+    name="delay",
+    controlspec=controlspec.new(0.1,10,"lin",0.1,3.7,"s",1/100),
+    action=function(x) engine.setSecondsBetweenPatterns(x) end
+  }
+
+  params:add{
+    type="control",
+    id="blend",
+    name="blend",
+    controlspec=controlspec.new(0,1,"lin",0.01,0.1,"s",1/1000),
+    action=function(x) engine.setBlend(x) end
   }
 
   params:add_number(
@@ -115,25 +122,25 @@ function init()
   params:bang()
   redraw()
 
-  local generate_debounce = 10
+  local generate_debounce=10
   clock.run(function()
-    while true do 
+    while true do
       clock.sleep(1)
       if params:get("randomize")==2 then
-        if math.random(1,100)<10 then 
+        if math.random(1,100)<10 then
           params:set("scale",math.random(1,#bloom_scales))
         end
-        if math.random(1,100)<10 then 
+        if math.random(1,100)<10 then
           params:set("delay",math.random(20,60)/10)
         end
       end
-      if params:get("generate")==2 then 
+      if params:get("generate")==2 then
         if generate_debounce>0 then
           generate_debounce=generate_debounce-1
         end
-        if generate_debounce==0 and math.random(1,100)<10 then 
+        if generate_debounce==0 and math.random(1,100)<10 then
           print("generating")
-          local num_positions = math.random(3,10)
+          local num_positions=math.random(3,10)
           for i=1,num_positions do
             local x=math.random(1,128)/128
             local y=math.random(1,64)/64
@@ -142,7 +149,7 @@ function init()
             add_circle({x=x*128,y=y*64,r=0,l=15})
             clock.sleep(math.random(10,1000)/1000)
           end
-          generate_debounce = math.random(3,10)
+          generate_debounce=math.random(3,10)
         end
       end
     end
@@ -163,17 +170,17 @@ function key(k,z)
     local y=cursor.y/64
     engine.record(x,y)
     add_circle({x=x*128,y=y*64,r=0,l=15})
-  elseif k==2 and z==1 then 
-    if params:get("randomize")==2 then 
-      if params:get("generate")==2 then 
-        params:set("randomize",1) 
+  elseif k==2 and z==1 then
+    if params:get("randomize")==2 then
+      if params:get("generate")==2 then
+        params:set("randomize",1)
       else
-        params:set("generate",2) 
+        params:set("generate",2)
       end
-    elseif params:get("generate")==2 then 
-      params:set("generate",1) 
+    elseif params:get("generate")==2 then
+      params:set("generate",1)
     else
-      params:set("randomize",2) 
+      params:set("randomize",2)
     end
   end
 end
@@ -216,12 +223,12 @@ function redraw()
   screen.text(params:string("scale"))
   screen.move(128,8)
   if params:get("generate")==2 then
-    if params:get("randomize")==2 then 
+    if params:get("randomize")==2 then
       screen.text_right("generate+randomize")
     else
       screen.text_right("generate")
     end
-  elseif params:get("randomize")==2 then 
+  elseif params:get("randomize")==2 then
     screen.text_right("randomize")
   end
 
