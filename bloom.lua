@@ -218,7 +218,7 @@ function init()
           params:set("blend",math.random(0,100)/100)
         end
       end
-      if time_since_last_note>1 and params:get("evolve")==2 and params:get("generate")==1 then 
+      if time_since_last_note>11 and params:get("evolve")==2 and params:get("generate")==1 then 
         print("[bloom] evolving on")
         params:set("generate",2)
       end
