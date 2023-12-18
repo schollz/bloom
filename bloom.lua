@@ -60,13 +60,13 @@ function init()
     end,
     note_on_norns=function(args)
       do_note(
-        args[1],
-        args[2],
+        tonumber(args[1]),
+        tonumber(args[2]),
         true
       )
     end,
     note_off_norns=function(args)
-      do_note(args[1],0,false)
+      do_note(tonumber(args[1]),0,false)
     end
   }
   osc.event=function(path,args,from)
@@ -170,17 +170,42 @@ function init()
     end
   }
 
+
+  params:add{type = "number", id = "root_note", name = "root note",
+  min = 0, max = 127, default = 60, formatter = function(param) return musicutil.note_num_to_name(param:get(), true) end,
+  action = function() 
+    engine.setRoot(params:get("root_note")-60)
+  end}
+
   params:add_number(
     "drone_volume",-- id
     "drone volume",-- name
     -96,-- min
-    6,-- max
-    0,-- default
-    function(param) return string.format("%d dB",param:get()) end -- formatter
+    12,-- max
+    -3,-- default
+    function(param)  
+      local s=""
+      if param:get()>0 then
+        s="+"
+      end
+      return string.format("%s%d dB",s,param:get()) 
+    end -- formatter
   )
   params:set_action("drone_volume",function(v)
     engine.setDroneVolume(params:get("drone_volume"))
   end)
+
+
+  params:add{
+    type="control",
+    id="shimmer",
+    name="shimmer",
+    controlspec=controlspec.new(0,100,"lin",1,2,"%",1/100),
+    action=function(x) 
+      engine.setShimmer(x/100)
+    end
+  }
+
 
   params:bang()
   redraw()
@@ -254,7 +279,6 @@ function all_notes_off()
 end
 
 function do_note(note_num,velocity,on)
-  print(note,velocity,on)
   if on then 
     time_since_last_note = 0
   end

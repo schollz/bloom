@@ -42,6 +42,12 @@ Engine_Bloom : CroneEngine {
         this.addCommand("removeAll","",{ arg msg;
             bloom.removeAll();
         });
+        this.addCommand("setShimmer","f",{ arg msg;
+            bloom.setShimmer(msg[1]);
+        });
+        this.addCommand("setRoot","f",{ arg msg;
+            bloom.setRoot(msg[1]);
+        });
 
     }
 

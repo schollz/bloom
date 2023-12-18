@@ -42,7 +42,7 @@ BloomWildly {
 		});
 		noiserelease = release;
 		release = release * age.linlin(0,patternDeath,1,0.5);
-		("[BloomWildly] emit"+v+"age"+age+"pattern"+pattern+patternI+patternN).postln;
+		("[BloomWildly] emit"+v+"age"+age+"pattern"+pattern+patternI+patternN+note).postln;
 		bloomSample.noteOn(0,
 			bloomSampleFolder,
 			note,
@@ -124,10 +124,18 @@ BloomWildly {
 		}).send(server);
 
 
-		SynthDef("blender",{ arg busA=0,busB=2,blend=0.2;
+		SynthDef("blender",{ arg busA=0,busB=2,blend=0.2,shimmer=1;
+			var snd, snd2;
 			var sndA = In.ar(busA,2);
 			var sndB = In.ar(busB,2);
-			Out.ar(0,SelectX.ar(VarLag.kr(blend,1.618,warp:\sine),[sndA,sndB]));
+			snd = SelectX.ar(VarLag.kr(blend,1.618,warp:\sine),[sndA,sndB]);
+			snd2=snd;
+			snd2 = DelayN.ar(snd, 0.03, 0.03);
+			snd2 = snd2 + PitchShift.ar(snd, 0.13, 2,0,1,1*shimmer/3);
+			snd2 = snd2 + PitchShift.ar(snd, 0.1, 4,0,1,0.5*shimmer/3);
+			snd2 = snd2 + PitchShift.ar(snd, 0.1, 8,0,1,0.125*shimmer/2);
+			snd = SelectX.ar(0.8,[snd2,snd]);
+			Out.ar(0,snd);
 		}).send(server);
 
 		SynthDef.new("bell",	{
@@ -153,11 +161,11 @@ BloomWildly {
 			DetectSilence.ar(snd,doneAction:2);
 			snd = LPF.ar(snd,400);
 			snd = Pan2.ar(snd,SinOsc.kr(1/Rand(2,5),mul:0.5));
-			Out.ar(0, snd * Lag.kr(amp,5) * 18.neg.dbamp);
+			Out.ar(0, snd * Lag.kr(amp,5) * 20.neg.dbamp);
 		}).send(server);
 
 		SynthDef("final",{
-			var snd;
+			var snd,snd2;
 			snd = In.ar(0,2);
 
 			snd = SelectX.ar(LFNoise2.kr(1/5).range(0.2,0.7),[snd,
@@ -167,6 +175,7 @@ BloomWildly {
 					decay: LFNoise2.kr(1/3).range(70,90),
 				)
 			]);
+
 
 			snd = snd * EnvGen.ar(Env.adsr(3,1,1,1));
 			snd = HPF.ar(snd,30);
@@ -235,7 +244,7 @@ BloomWildly {
 			server.sync;
 			syns.put("bass",Synth.after(syns.at("mod0"),"bass",[
 				freq: (60-12).midicps,
-				amp: 0.dbamp,
+				amp: 12.dbamp,
 			]));
 			NodeWatcher.register(syns.at("bass"));
 		}.play;
@@ -250,13 +259,13 @@ BloomWildly {
 			if (tickBetweenChordsDrone>0,{
 				tickBetweenChordsDrone = tickBetweenChordsDrone - 1;
 				if (tickBetweenChordsDrone==0) {
-					if (3.rand<starting,{
+					if (10.rand<starting,{
 						var note = [scale[0],scale[1]].choose + noteRoot;
 						tickBetweenChordsDrone = ticksBetweenChords;
 						("[BloomWildly] playing bass").postln;
 						syns.at("bass").set(\freq,(note-12).midicps);
 					});
-					if (3.rand<starting, {
+					if (10.rand<starting, {
 						// stop old pad
 						("[BloomWildly] playing drone").postln;
 						if (syns.at("drone").notNil,{
@@ -269,8 +278,8 @@ BloomWildly {
 						]));
 						NodeWatcher.register(syns.at("drone"));
 					});
-					if (starting>2,{
-						starting = 2;
+					if (starting>8,{
+						starting = 8;
 					})
 				}
 			});
@@ -371,6 +380,11 @@ BloomWildly {
 	setBlend {
 		arg v;
 		syns.at("blender").set(\blend,v);
+	}
+
+	setShimmer {
+		arg v;
+		syns.at("blender").set(\shimmer,2*v);
 	}
 
 	setRoot {
