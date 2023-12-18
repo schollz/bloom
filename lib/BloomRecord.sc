@@ -37,7 +37,7 @@ BloomRecord {
 		arg argServer, argFnEmit;
 		server = argServer;
 		fnEmit = argFnEmit;
-		delta = 0.1;
+		delta = 0.025;
 		tick = 0;
 		secondsBetweenRecordings = 3;
 		this.clear();

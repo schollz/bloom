@@ -37,7 +37,7 @@ for i=1,2 do
 	
 end
   params:add_group("DELAY",3)
-  params:add{id="delay", name="delay", type="control", 
+  params:add{id="delay_h", name="delay", type="control", 
     controlspec=controlspec.new(0,1,'lin',0,0.5,""),
     action=function(x) softcut.level(1,x*math.random(90,110)/100);softcut.level(2,x*math.random(90,110)/100) end}
   params:add{id="delay_rate", name="delay rate", type="control", 
