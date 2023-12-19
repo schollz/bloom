@@ -62,6 +62,7 @@ function GGrid:key_press(row,col,on)
     local y=row/self.rows-0.001
     local recorder=math.ceil(params:get("recorders")*y)-1
     y=(y*params:get("recorders"))-math.floor(y*params:get("recorders"))
+    print(recorder,x,y)
     engine.record(recorder,x,y)
     self.add_circle({x=x*128,y=y*64,r=0,l=15})
   end

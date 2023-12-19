@@ -225,7 +225,7 @@ function init()
         "lanes",-- name
         1,-- min
         num_recorders_max,-- max
-        1,-- default
+        1-- default
       )
 
       params:bang()
