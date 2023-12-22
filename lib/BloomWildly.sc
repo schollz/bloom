@@ -22,6 +22,7 @@ BloomWildly {
 	var droneVolume;
 	var oscs;
 	var params;
+	var bellid;
 
 	*new {
 		arg argServer,argbloomSampleFolder;
@@ -59,12 +60,16 @@ BloomWildly {
 					\release,release,
 					\noiserelease,noiserelease
 				];
-				var id="bell"++(100.rand);
+				var bellname="bell"++(bellid);
+				bellid = bellid + 1;
+				if (bellid>100,{
+					bellid = 0;
+				});
 				// update with current volumes, etc
 				params.at("bell").keysValuesDo({ arg k, v;
 					args=args++[k,v];
 				});
-				syns.put(id,
+				syns.put(bellname,
 					Synth.head(server,"bell",args).onFree({
 						NetAddr("127.0.0.1", 10111).sendMsg("/note_off_norns",note);
 					})
@@ -85,6 +90,7 @@ BloomWildly {
 		droneVolume = 3.neg.dbamp;
 
 		// initialize globals
+		bellid = 0;
 		numRecorders = 8;
 		patternDeath = 60;
 		delta = 0.1;
