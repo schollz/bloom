@@ -417,9 +417,9 @@ BloomWildly {
 	setBell {
 		arg k,v;
 		params.at("bell").set(k,v);
-		syns.keysValuesDo({ arg k,v;
+		syns.keysValuesDo({ arg name, syn;
 			if (name.contains("bell"),{
-				if (v.isRunning,{
+				if (syn.isRunning,{
 					syn.set(k,v);
 				});
 			});

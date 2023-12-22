@@ -36,6 +36,7 @@ cursor = {
     show = false
 }
 time_since_last_note = 0
+local is_refreshed = false
 
 options = {}
 options.OUT = {"none", "midi", "crow out 1+2", "crow ii JF", "crow ii 301"}
@@ -278,20 +279,15 @@ function init()
     }
     params:add{
         type = "control",
-        id = "reverb",
-        name = "reverb wet",
+        id = "reverb_wet",
+        name = "reverb",
         controlspec = controlspec.new(0, 100, "lin", 1, 30, "%", 1 / 100),
         action = function(x) engine.setFinal("reverb", x / 100) end
     }
 
     local num_recorders_max = 8
     if ggrid ~= nil and ggrid.rows ~= nil then num_recorders_max = ggrid.rows end
-    params:add_number("recorders", -- id
-    "lanes", -- name
-    1, -- min
-    num_recorders_max, -- max
-    1 -- default
-    )
+    params:add_number("recorders", "lanes", 1, num_recorders_max, 1)
 
     params:bang()
     redraw()
@@ -300,6 +296,7 @@ function init()
         while true do
             clock.sleep(1 / 60)
             update_circles()
+            if not is_refreshed then redraw() end
             if debounce_blend > 0 then
                 debounce_blend = debounce_blend - 1
             end
@@ -438,7 +435,10 @@ function update_circles()
     ggrid.circles = new_circles
 end
 
-function refresh() redraw() end
+function refresh()
+    is_refreshed = true
+    redraw()
+end
 
 function redraw()
     if not installer:ready() then
