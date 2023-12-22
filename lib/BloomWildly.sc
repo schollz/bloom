@@ -21,6 +21,7 @@ BloomWildly {
 	var scales;
 	var droneVolume;
 	var oscs;
+	var params;
 
 	*new {
 		arg argServer,argbloomSampleFolder;
@@ -51,16 +52,23 @@ BloomWildly {
 			0,
 			NetAddr("127.0.0.1", 10111).sendMsg("/note_on_norns",note,age.linlin(0,patternDeath,127,1).round.asInteger);
 			buses.at("acoustic").index,{
-				Synth.head(server,"bell",[
+				var args=[
 					\out, buses.at("synthetic"),
 					\freq,(note).midicps,
 					\amp,(age.linlin(0,patternDeath,-12,-36).dbamp),
 					\release,release,
 					\noiserelease,noiserelease
-				]).onFree({
-					NetAddr("127.0.0.1", 10111).sendMsg("/note_off_norns",note);
+				];
+				var id="bell"++(100.rand);
+				// update with current volumes, etc
+				params.at("bell").keysValuesDo({ arg k, v;
+					args=args++[k,v];
 				});
-
+				syns.put(id,
+					Synth.head(server,"bell",args).onFree({
+						NetAddr("127.0.0.1", 10111).sendMsg("/note_off_norns",note);
+					})
+				);
 		});
 		v = v.add(age);
 		NetAddr("127.0.0.1", 10111).sendMsg("/emit",*v);
@@ -139,17 +147,17 @@ BloomWildly {
 		}).send(server);
 
 		SynthDef.new("bell",	{
-			arg out=0, freq=440, rate=0.6, pan=0.0, amp=1.0, dur=1.0, lfor1=0.08, lfor2=0.05, nl=0.5, filt=5000, release=1, noiserelease=1;
+			arg out=0, freq=440, rate=0.6, pan=0.0, amp=1.0, atk=0.005, natk=0.005, dur=1.0, lfor1=0.08, lfor2=0.05, nl=0.5, filt=5000, release=1, noiserelease=1;
 			var sig, sub, lfo1, lfo2, env, noiseenv, noise;
 
 			lfo1  = SinOsc.kr(lfor1, 0.5, 1, 0);
 			lfo2  = SinOsc.kr(lfor2, 0, 1, 0);
 			sig   = SinOscFB.ar(freq, lfo1, 1, 0);
-			env = EnvGen.ar(Env.perc(0.005,rrand(2,4)*release),doneAction:2);
-			noiseenv = EnvGen.ar(Env.perc(0.005,rrand(2,4)*noiserelease),doneAction:2);
+			env = EnvGen.ar(Env.perc(atk,dur*rrand(2,4)*release),doneAction:2);
+			noiseenv = EnvGen.ar(Env.perc(natk,dur*rrand(2,4)*noiserelease),doneAction:2);
 			noise = PinkNoise.ar(nl, 0) * noiseenv;
 			sig   = (sig * env) +  noise;
-			sig   = MoogFF.ar(sig, 5000, 0, 0, 1, 0);
+			sig   = MoogFF.ar(sig, filt, 0, 0, 1, 0);
 			sig   = Pan2.ar(sig, pan, amp);
 			Out.ar(out, sig * 6.neg.dbamp);
 		}).send(server);
@@ -165,10 +173,11 @@ BloomWildly {
 		}).send(server);
 
 		SynthDef("final",{
+			arg reverbWet=0.3;
 			var snd,snd2;
 			snd = In.ar(0,2);
 
-			snd = SelectX.ar(LFNoise2.kr(1/5).range(0.2,0.7),[snd,
+			snd = SelectX.ar(reverbWet,[snd,
 				Fverb.ar(snd[0],snd[1],200,
 					input_lowpass_cutoff: LFNoise2.kr(1/3).range(5000,10000),
 					tail_density: LFNoise2.kr(1/3).range(70,90),
@@ -203,6 +212,8 @@ BloomWildly {
 		// initialize dictionaries
 		syns = Dictionary.new();
 		buses = Dictionary.new();
+		params = Dictionary.new();
+		params.put("bell",Dictionary.new());
 
 		// initialize buses
 		// modulation buses
@@ -390,6 +401,23 @@ BloomWildly {
 	setRoot {
 		arg v;
 		noteRoot = v;
+	}
+
+	setFinal {
+		arg k, v;
+		syns.at("final").set(k,v);
+	}
+
+	setBell {
+		arg k,v;
+		params.at("bell").set(k,v);
+		syns.keysValuesDo({ arg k,v;
+			if (name.contains("bell"),{
+				if (v.isRunning,{
+					syn.set(k,v);
+				});
+			});
+		});
 	}
 
 	record {

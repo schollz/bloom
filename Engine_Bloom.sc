@@ -48,6 +48,12 @@ Engine_Bloom : CroneEngine {
         this.addCommand("setRoot","f",{ arg msg;
             bloom.setRoot(msg[1]);
         });
+        this.addCommand("setBell","sf",{ arg msg;
+            bloom.setBell(msg[1],msg[2]);
+        });
+        this.addCommand("setFinal","sf",{ arg msg;
+            bloom.setFinal(msg[1],msg[2]);
+        });
 
     }
 
