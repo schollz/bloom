@@ -69,6 +69,7 @@ BloomWildly {
 				params.at("bell").keysValuesDo({ arg k, v;
 					args=args++[k,v];
 				});
+				args.postln;
 				syns.put(bellname,
 					Synth.head(server,"bell",args).onFree({
 						NetAddr("127.0.0.1", 10111).sendMsg("/note_off_norns",note);
@@ -126,7 +127,7 @@ BloomWildly {
 			output = RLPF.ar(output, (env*freq*0.7) + (freq * lfo.value.range(0.1,3)), lfo.value.range(0.2,1));
 			output = Splay.ar(output, lfo.value.range(0,1));
 			output = output * env * Lag.kr(amp,2);
-			Out.ar(0, output * 24.neg.dbamp);
+			Out.ar(0, output * 20.neg.dbamp);
 		}).send(server);
 
 		SynthDef("sine",{ arg bus=0,freq=10;
@@ -159,12 +160,14 @@ BloomWildly {
 			lfo1  = SinOsc.kr(lfor1, 0.5, 1, 0);
 			lfo2  = SinOsc.kr(lfor2, 0, 1, 0);
 			sig   = SinOscFB.ar(freq, lfo1, 1, 0);
-			env = EnvGen.ar(Env.perc(atk,dur*rrand(2,4)*release),doneAction:2);
-			noiseenv = EnvGen.ar(Env.perc(natk,dur*rrand(2,4)*noiserelease),doneAction:2);
+			env = EnvGen.ar(Env.perc(atk,dur*rrand(1,2.5)*release));
+			noiseenv = EnvGen.ar(Env.perc(natk,dur*rrand(1,2.5)*noiserelease));
 			noise = PinkNoise.ar(nl, 0) * noiseenv;
 			sig   = (sig * env) +  noise;
-			sig   = MoogFF.ar(sig, filt, 0, 0, 1, 0);
-			sig   = Pan2.ar(sig, pan, amp);
+			// sig   = MoogFF.ar(sig, filt, 0, 0, 1, 0);
+			sig = RLPF.ar(sig,filt,0.707);
+			sig   = Pan2.ar(sig, rrand(-200,200)/1000, amp);
+			DetectSilence.ar(sig, doneAction:2);
 			Out.ar(out, sig * 6.neg.dbamp);
 		}).send(server);
 
@@ -175,22 +178,13 @@ BloomWildly {
 			DetectSilence.ar(snd,doneAction:2);
 			snd = LPF.ar(snd,400);
 			snd = Pan2.ar(snd,SinOsc.kr(1/Rand(2,5),mul:0.5));
-			Out.ar(0, snd * Lag.kr(amp,1) * 20.neg.dbamp);
+			Out.ar(0, snd * Lag.kr(amp,1) * 18.neg.dbamp);
 		}).send(server);
 
 		SynthDef("final",{
 			arg reverbWet=0.3;
 			var snd,snd2;
 			snd = In.ar(0,2);
-
-			snd = SelectX.ar(reverbWet,[snd,
-				Fverb.ar(snd[0],snd[1],200,
-					input_lowpass_cutoff: LFNoise2.kr(1/3).range(5000,10000),
-					tail_density: LFNoise2.kr(1/3).range(70,90),
-					decay: LFNoise2.kr(1/3).range(70,90),
-				)
-			]);
-
 
 			snd = snd * EnvGen.ar(Env.adsr(3,1,1,1));
 			snd = HPF.ar(snd,30);
@@ -416,10 +410,11 @@ BloomWildly {
 
 	setBell {
 		arg k,v;
-		params.at("bell").set(k,v);
+		params.at("bell").put(k,v);
 		syns.keysValuesDo({ arg name, syn;
 			if (name.contains("bell"),{
 				if (syn.isRunning,{
+					["setting",k,v].postln;
 					syn.set(k,v);
 				});
 			});

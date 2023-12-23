@@ -16,12 +16,7 @@
 musicutil = require("musicutil")
 ggrid_ = include("lib/ggrid")
 halfsecond = include("lib/halfsecond")
-installer_ = include("lib/scinstaller/scinstaller")
-installer = installer_:new{
-    requirements = {"Fverb"},
-    zip = "https://github.com/schollz/portedplugins/releases/download/v0.4.5/PortedPlugins-RaspberryPi.zip"
-}
-engine.name = installer:ready() and 'Bloom' or nil
+engine.name = 'Bloom'
 
 debounce_delay = 0
 debounce_blend = 0
@@ -47,19 +42,8 @@ local active_notes = {}
 function add_circle(c) table.insert(ggrid.circles, c) end
 
 function init()
-    if not installer:ready() then
-        clock.run(function()
-            while true do
-                redraw()
-                clock.sleep(1 / 5)
-            end
-        end)
-        do return end
-    end
-
     ggrid = ggrid_:new{add_circle = add_circle}
     ggrid.circles = {{x = 64, y = 32, r = 1, l = 15}}
-    halfsecond.init()
 
     midi_devices = {}
     for i = 1, #midi.vports do
@@ -94,6 +78,8 @@ function init()
     end
 
     params:add_separator("BLOOM")
+
+    halfsecond.init()
 
     params:add_group("outs", 3)
     params:add{
@@ -145,7 +131,7 @@ function init()
         type = "control",
         id = "noise_level",
         name = "noise level",
-        controlspec = controlspec.new(0, 200, "lin", 1, 50, "%", 1 / 200),
+        controlspec = controlspec.new(0, 200, "lin", 1, 15, "%", 1 / 200),
         action = function(x) engine.setBell("nl", x / 100) end
     }
     params:add{
@@ -159,7 +145,7 @@ function init()
         type = "control",
         id = "noise_release",
         name = "noise release",
-        controlspec = controlspec.new(0, 200, "lin", 1, 100, "%", 1 / 200),
+        controlspec = controlspec.new(0, 400, "lin", 1, 100, "%", 1 / 400),
         action = function(x) engine.setBell("noiserelease", x / 100) end
     }
     params:add{
@@ -173,7 +159,7 @@ function init()
         type = "control",
         id = "synth_release",
         name = "synth release",
-        controlspec = controlspec.new(0, 200, "lin", 1, 100, "%", 1 / 200),
+        controlspec = controlspec.new(0, 400, "lin", 1, 75, "%", 1 / 400),
         action = function(x) engine.setBell("release", x / 100) end
     }
     params:add{
@@ -193,7 +179,7 @@ function init()
         "ambrette", "benzoin", "bergamot", "labdanum", "neroli", "orris",
         "tolu", "vetiver", "ylang"
     }
-    params:add_option("scale", "scale", bloom_scales, 6)
+    params:add_option("scale", "scale", bloom_scales, 4)
     params:set_action("scale", function(v)
         engine.setScale(params:string("scale"))
         debounce_scale = 180
@@ -276,13 +262,6 @@ function init()
         name = "shimmer",
         controlspec = controlspec.new(0, 100, "lin", 1, 2, "%", 1 / 100),
         action = function(x) engine.setShimmer(x / 100) end
-    }
-    params:add{
-        type = "control",
-        id = "reverb_wet",
-        name = "reverb",
-        controlspec = controlspec.new(0, 100, "lin", 1, 30, "%", 1 / 100),
-        action = function(x) engine.setFinal("reverb", x / 100) end
     }
 
     local num_recorders_max = 8
@@ -387,7 +366,6 @@ function do_note(note_num, velocity, on)
 end
 
 function enc(k, d)
-    if not installer:ready() then do return end end
     if k == 1 then
         params:delta("scale", d)
     elseif k == 2 then
@@ -398,10 +376,6 @@ function enc(k, d)
 end
 
 function key(k, z)
-    if not installer:ready() then
-        installer:key(k, z)
-        do return end
-    end
     if k == 3 and z == 1 then
         cursor.x = math.random(1, 128)
         cursor.y = math.random(1, 64)
@@ -441,10 +415,6 @@ function refresh()
 end
 
 function redraw()
-    if not installer:ready() then
-        installer:redraw()
-        do return end
-    end
     screen.clear()
     screen.blend_mode(2)
 
