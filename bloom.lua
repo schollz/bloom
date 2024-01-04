@@ -1,4 +1,4 @@
--- bloom v1.0.0
+-- bloom v1.0.1
 -- (adapted from Eno)
 --
 -- llllllll.co/t/bloom
@@ -186,7 +186,7 @@ function init()
 
     params:add{
         type = "control",
-        id = "delay",
+        id = "delayEngine",
         name = "delay",
         controlspec = controlspec.new(0.1, 10, "lin", 0.1, 3.1, "s", 1 / 100),
         action = function(x)
@@ -298,7 +298,7 @@ function init()
                     params:set("scale", math.random(1, #bloom_scales))
                 end
                 if math.random(1, 100) < 10 then
-                    params:set("delay", math.random(20, 60) / 10)
+                    params:set("delayEngine", math.random(20, 60) / 10)
                 end
                 if math.random(1, 100) < 10 then
                     params:set("blend", math.random(0, 100) / 100)
@@ -364,7 +364,7 @@ function enc(k, d)
     if k == 1 then
         params:delta("scale", d)
     elseif k == 2 then
-        params:delta("delay", d)
+        params:delta("delayEngine", d)
     elseif k == 3 then
         params:delta("blend", d)
     end
@@ -428,17 +428,17 @@ function redraw()
     if debounce_delay > 0 then
         screen.level(util.round(debounce_delay / 180 * 15))
         screen.move(1, 54 - 18)
-        screen.text("delay " .. params:string("delay"))
+        screen.text("delay " .. params:string("delayEngine"))
         screen.move(0, 60 - 18)
         screen.line(128, 60 - 18)
         screen.stroke()
         screen.move(0, 61 - 18)
         screen.line(128, 61 - 18)
         screen.stroke()
-        screen.move(params:get("delay") * 128 / 10, 56 - 18)
-        screen.line(params:get("delay") * 128 / 10, 64 - 18)
-        screen.move(params:get("delay") * 128 / 10 + 1, 56 - 18)
-        screen.line(params:get("delay") * 128 / 10 + 1, 64 - 18)
+        screen.move(params:get("delayEngine") * 128 / 10, 56 - 18)
+        screen.line(params:get("delayEngine") * 128 / 10, 64 - 18)
+        screen.move(params:get("delayEngine") * 128 / 10 + 1, 56 - 18)
+        screen.line(params:get("delayEngine") * 128 / 10 + 1, 64 - 18)
         screen.stroke()
     end
     if debounce_blend > 0 then
