@@ -171,7 +171,6 @@ function init()
     }
     params:set("filter_level", 5000);
 
-    params:add_option("generate", "generate", {"off", "on"}, 1)
     params:add_option("randomize", "randomize", {"off", "on"}, 1)
     params:add_option("evolve", "evolve when idle", {"off", "on"}, 2)
 
@@ -289,6 +288,7 @@ function init()
     end)
 
     local generate_debounce = 10
+    local do_generate = true
     clock.run(function()
         while true do
             clock.sleep(1)
@@ -304,12 +304,7 @@ function init()
                     params:set("blend", math.random(0, 100) / 100)
                 end
             end
-            if time_since_last_note > 11 and params:get("evolve") == 2 and
-                params:get("generate") == 1 then
-                print("[bloom] evolving on")
-                params:set("generate", 2)
-            end
-            if params:get("generate") == 2 then
+            if params:get("evolve") == 2 then
                 if generate_debounce > 0 then
                     generate_debounce = generate_debounce - 1
                 end
