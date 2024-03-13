@@ -55,7 +55,7 @@ function GGrid:key_press(row, col, on)
                 math.floor(y * params:get("recorders"))
         print(recorder, x, y)
         engine.record(recorder, x, y)
-        self.add_circle({x = x * 128, y = y * 64, r = 0, l = 15})
+        self.add_circle({x = x * 128, y = y * self.rows * 8, r = 0, l = 15})
     end
 end
 
@@ -86,7 +86,7 @@ function GGrid:get_visual()
                 local x = util.round(c.x + c.r * math.cos(math.rad(a)))
                 local y = util.round(c.y + c.r * math.sin(math.rad(a)))
                 x = util.round(x * self.cols / 128)
-                y = util.round(y * self.rows / 64)
+                y = util.round(y / 8)
                 if self.circles[i].visual[y] == nil then
                     self.circles[i].visual[y] = {}
                 end

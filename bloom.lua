@@ -59,7 +59,7 @@ function init()
             local x = tonumber(args[1])
             local y = tonumber(args[2])
             local l = util.linlin(0, 180, 15, 1, tonumber(args[#args]))
-            add_circle({x = x * 128, y = y * 64, r = 0, l = l})
+            add_circle({x = x * 128, y = y * ggrid.rows * 8, r = 0, l = l})
         end,
         note_on_norns = function(args)
             do_note(tonumber(args[1]), tonumber(args[2]), true)
