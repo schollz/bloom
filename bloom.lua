@@ -1,4 +1,4 @@
--- bloom v1.0.2
+-- bloom v1.0.3
 -- (adapted from Eno)
 --
 -- llllllll.co/t/bloom
