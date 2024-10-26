@@ -39,17 +39,25 @@ local midi_devices
 local midi_device
 local midi_channel
 local active_notes = {}
-function add_circle(c) table.insert(ggrid.circles, c) end
+function add_circle(c)
+    table.insert(ggrid.circles, c)
+end
 
 function init()
-    ggrid = ggrid_:new{add_circle = add_circle}
-    ggrid.circles = {{x = 64, y = 32, r = 1, l = 15}}
+    ggrid = ggrid_:new{
+        add_circle = add_circle
+    }
+    ggrid.circles = {{
+        x = 64,
+        y = 32,
+        r = 1,
+        l = 15
+    }}
 
     midi_devices = {}
     for i = 1, #midi.vports do
         local long_name = midi.vports[i].name
-        local short_name = string.len(long_name) > 15 and
-                               util.acronym(long_name) or long_name
+        local short_name = string.len(long_name) > 15 and util.acronym(long_name) or long_name
         table.insert(midi_devices, i .. ": " .. short_name)
     end
 
@@ -59,7 +67,12 @@ function init()
             local x = tonumber(args[1])
             local y = tonumber(args[2])
             local l = util.linlin(0, 180, 15, 1, tonumber(args[#args]))
-            add_circle({x = x * 128, y = y * ggrid.rows * 8, r = 0, l = l})
+            add_circle({
+                x = x * 128,
+                y = y * ggrid.rows * 8,
+                r = 0,
+                l = l
+            })
         end,
         note_on_norns = function(args)
             do_note(tonumber(args[1]), tonumber(args[2]), true)
@@ -69,7 +82,9 @@ function init()
         end
     }
     osc.event = function(path, args, from)
-        if string.sub(path, 1, 1) == "/" then path = string.sub(path, 2) end
+        if string.sub(path, 1, 1) == "/" then
+            path = string.sub(path, 2)
+        end
         if path ~= nil and osc_fun[path] ~= nil then
             osc_fun[path](args)
         else
@@ -103,7 +118,9 @@ function init()
         name = "midi out device",
         options = midi_devices,
         default = 1,
-        action = function(value) midi_device = midi.connect(value) end
+        action = function(value)
+            midi_device = midi.connect(value)
+        end
     }
 
     params:add{
@@ -125,59 +142,70 @@ function init()
         id = "note_duration",
         name = "note duration",
         controlspec = controlspec.new(0, 200, "lin", 1, 100, "%", 1 / 200),
-        action = function(x) engine.setBell("dur", x / 100) end
+        action = function(x)
+            engine.setBell("dur", x / 100)
+        end
     }
     params:add{
         type = "control",
         id = "noise_level",
         name = "noise level",
         controlspec = controlspec.new(0, 200, "lin", 1, 15, "%", 1 / 200),
-        action = function(x) engine.setBell("nl", x / 100) end
+        action = function(x)
+            engine.setBell("nl", x / 100)
+        end
     }
     params:add{
         type = "control",
         id = "noise_attack",
         name = "noise attack",
         controlspec = controlspec.new(0, 2000, "lin", 1, 5, "ms", 1 / 2000),
-        action = function(x) engine.setBell("natk", x / 1000) end
+        action = function(x)
+            engine.setBell("natk", x / 1000)
+        end
     }
     params:add{
         type = "control",
         id = "noise_release",
         name = "noise release",
         controlspec = controlspec.new(0, 400, "lin", 1, 100, "%", 1 / 400),
-        action = function(x) engine.setBell("noiserelease", x / 100) end
+        action = function(x)
+            engine.setBell("noiserelease", x / 100)
+        end
     }
     params:add{
         type = "control",
         id = "synth_attack",
         name = "synth attack",
         controlspec = controlspec.new(0, 2000, "lin", 1, 5, "ms", 1 / 2000),
-        action = function(x) engine.setBell("atk", x / 1000) end
+        action = function(x)
+            engine.setBell("atk", x / 1000)
+        end
     }
     params:add{
         type = "control",
         id = "synth_release",
         name = "synth release",
         controlspec = controlspec.new(0, 400, "lin", 1, 75, "%", 1 / 400),
-        action = function(x) engine.setBell("release", x / 100) end
+        action = function(x)
+            engine.setBell("release", x / 100)
+        end
     }
     params:add{
         type = "control",
         id = "filter_level",
         name = "filter level",
         controlspec = controlspec.WIDEFREQ,
-        action = function(x) engine.setBell("filt", x) end
+        action = function(x)
+            engine.setBell("filt", x)
+        end
     }
     params:set("filter_level", 5000);
 
     params:add_option("randomize", "randomize", {"off", "on"}, 1)
     params:add_option("evolve", "evolve when idle", {"off", "on"}, 2)
 
-    bloom_scales = {
-        "ambrette", "benzoin", "bergamot", "labdanum", "neroli", "orris",
-        "tolu", "vetiver", "ylang"
-    }
+    bloom_scales = {"ambrette", "benzoin", "bergamot", "labdanum", "neroli", "orris", "tolu", "vetiver", "ylang"}
     params:add_option("scale", "scale", bloom_scales, 4)
     params:set_action("scale", function(v)
         engine.setScale(params:string("scale"))
@@ -211,7 +239,9 @@ function init()
     1, -- min
     600, -- max
     60, -- default
-    function(param) return string.format("%d sec", param:get()) end -- formatter
+    function(param)
+        return string.format("%d sec", param:get())
+    end -- formatter
     )
     params:set_action("duration", function(v)
         engine.setPatternDuration(params:get("duration"))
@@ -233,11 +263,13 @@ function init()
         name = "root note",
         min = 0,
         max = 127,
-        default = 60,
+        default = 48,
         formatter = function(param)
             return musicutil.note_num_to_name(param:get(), true)
         end,
-        action = function() engine.setRoot(params:get("root_note") - 60) end
+        action = function()
+            engine.setRoot(params:get("root_note"))
+        end
     }
 
     params:add_number("drone_volume", -- id
@@ -247,7 +279,9 @@ function init()
     -3, -- default
     function(param)
         local s = ""
-        if param:get() > 0 then s = "+" end
+        if param:get() > 0 then
+            s = "+"
+        end
         return string.format("%s%d dB", s, param:get())
     end -- formatter
     )
@@ -260,11 +294,15 @@ function init()
         id = "shimmer",
         name = "shimmer",
         controlspec = controlspec.new(0, 100, "lin", 1, 2, "%", 1 / 100),
-        action = function(x) engine.setShimmer(x / 100) end
+        action = function(x)
+            engine.setShimmer(x / 100)
+        end
     }
 
     local num_recorders_max = 8
-    if ggrid ~= nil and ggrid.rows ~= nil then num_recorders_max = ggrid.rows end
+    if ggrid ~= nil and ggrid.rows ~= nil then
+        num_recorders_max = ggrid.rows
+    end
     params:add_number("recorders", "lanes", 1, num_recorders_max, 1)
 
     params:bang()
@@ -274,7 +312,9 @@ function init()
         while true do
             clock.sleep(1 / 60)
             update_circles()
-            if not is_refreshed then redraw() end
+            if not is_refreshed then
+                redraw()
+            end
             if debounce_blend > 0 then
                 debounce_blend = debounce_blend - 1
             end
@@ -308,8 +348,7 @@ function init()
                 if generate_debounce > 0 then
                     generate_debounce = generate_debounce - 1
                 end
-                if (generate_debounce == 0 and math.random(1, 100) < 10) or
-                    time_since_last_note > 16 then
+                if (generate_debounce == 0 and math.random(1, 100) < 10) or time_since_last_note > 16 then
                     print("[bloom] generating")
                     local num_positions = math.random(3, 10)
                     for i = 1, num_positions do
@@ -317,10 +356,13 @@ function init()
                         local y = math.random(1, 64) / 64
                         print(i, x, y)
                         engine.record(0, x, y)
-                        add_circle({x = x * 128, y = y * 64, r = 0, l = 15})
-                        clock.sleep(math.random(100, params:get(
-                                                    "seconds_between") * 1000) /
-                                        1000)
+                        add_circle({
+                            x = x * 128,
+                            y = y * 64,
+                            r = 0,
+                            l = 15
+                        })
+                        clock.sleep(math.random(100, params:get("seconds_between") * 1000) / 1000)
                     end
                     generate_debounce = math.random(6, 23)
                 end
@@ -339,7 +381,9 @@ function all_notes_off()
 end
 
 function do_note(note_num, velocity, on)
-    if on then time_since_last_note = 0 end
+    if on then
+        time_since_last_note = 0
+    end
     if params:get("out") == 2 then
         if on then
             midi_device:note_on(note_num, velocity, midi_channel)
@@ -377,7 +421,12 @@ function key(k, z)
         local x = cursor.x / 128
         local y = cursor.y / 64
         engine.record(0, x, y)
-        add_circle({x = x * 128, y = y * 64, r = 0, l = 15})
+        add_circle({
+            x = x * 128,
+            y = y * 64,
+            r = 0,
+            l = 15
+        })
     elseif k == 2 and z == 1 then
         engine.removeAll()
     end
