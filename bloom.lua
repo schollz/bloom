@@ -1,4 +1,4 @@
--- bloom v1.0.3
+-- bloom v1.0.4
 -- (adapted from Eno)
 --
 -- llllllll.co/t/bloom
@@ -369,6 +369,8 @@ function init()
             end
         end
     end)
+
+    params:default()
 end
 
 function all_notes_off()
