@@ -65,15 +65,17 @@ BloomSample {
 			t_trig=1,rate=1,
 			attack=0.01,decay=0.1,sustain=1.0,release=6,gate=1,
 			startPos=0;
-			var snd,snd2;
+			var snd,snd2,duration;
 			var frames1=BufFrames.ir(buf1);
 			var frames2=BufFrames.ir(buf2);
 			rate=rate*BufRateScale.ir(buf1);
+			duration=(frames1-(startPos*frames1))/(rate*server.sampleRate);
 			snd=PlayBuf.ar(1,buf1,rate,t_trig,startPos:startPos*frames1,doneAction:Select.kr(frames1>frames2,[0,2]));
 			snd2=PlayBuf.ar(1,buf2,rate,t_trig,startPos:startPos*frames2,doneAction:Select.kr(frames2>frames1,[0,2]));
 			snd=(buf1mix*snd)+((1-buf1mix)*snd2);//SelectX.ar(buf1mix,[snd2,snd]);
 			snd=snd*EnvGen.ar(Env.adsr(attack,decay,sustain,release),gate,doneAction:2);
 			DetectSilence.ar(snd,0.001,doneAction:2);
+			snd=snd*EnvGen.ar(Env.linen(0.01,duration/2,duration/2-0.01),gate,doneAction:2);
 			snd=Pan2.ar(snd,pan,amp);
 			Out.ar(out,snd);
 		}).send(server);
@@ -83,15 +85,17 @@ BloomSample {
 			t_trig=1,rate=1,
 			attack=0.01,decay=0.1,sustain=1.0,release=6,gate=1,
 			startPos=0;
-			var snd,snd2;
+			var snd,snd2,duration;
 			var frames1=BufFrames.ir(buf1);
 			var frames2=BufFrames.ir(buf2);
 			rate=rate*BufRateScale.ir(buf1);
+			duration=(frames1-(startPos*frames1))/(rate*server.sampleRate);
 			snd=PlayBuf.ar(2,buf1,rate,t_trig,startPos:startPos*frames1,doneAction:Select.kr(frames1>frames2,[0,2]));
 			snd2=PlayBuf.ar(2,buf2,rate,t_trig,startPos:startPos*frames2,doneAction:Select.kr(frames2>frames1,[0,2]));
 			snd=(buf1mix*snd)+((1-buf1mix)*snd2);//SelectX.ar(buf1mix,[snd2,snd]);
 			snd=snd*EnvGen.ar(Env.adsr(attack,decay,sustain,release),gate,doneAction:2);
 			DetectSilence.ar(snd,0.001,doneAction:2);
+			snd=snd*EnvGen.ar(Env.linen(0.01,duration/2,duration/2-0.01),gate,doneAction:2);
 			snd=Balance2.ar(snd[0],snd[1],pan,amp);
 			Out.ar(out,snd);
 		}).send(server);
@@ -102,12 +106,14 @@ BloomSample {
 			t_trig=1,rate=1,
 			attack=0.01,decay=0.1,sustain=1.0,release=6,gate=1,
 			startPos=0;
-			var snd,snd2;
+			var snd,snd2,duration;
 			var frames1=BufFrames.ir(buf1);
 			rate=rate*BufRateScale.ir(buf1);
+			duration=(frames1-(startPos*frames1))/(rate*server.sampleRate);
 			snd=PlayBuf.ar(1,buf1,rate,t_trig,startPos:startPos*frames1,doneAction:2);
 			snd=snd*EnvGen.ar(Env.adsr(attack,decay,sustain,release),gate,doneAction:2);
 			DetectSilence.ar(snd,0.001,doneAction:2);
+			snd=snd*EnvGen.ar(Env.linen(0.01,duration/2,duration/2-0.01),gate,doneAction:2);
 			snd=Pan2.ar(snd,pan,amp);
 			Out.ar(out,snd);
 		}).send(server);
@@ -117,13 +123,15 @@ BloomSample {
 			t_trig=1,rate=1,
 			attack=0.01,decay=0.1,sustain=1.0,release=6,gate=1,
 			startPos=0;
-			var snd,snd2;
+			var snd,snd2,duration;
 			var frames1=BufFrames.ir(buf1);
 			rate=rate*BufRateScale.ir(buf1);
+			duration=(frames1-(startPos*frames1))/(rate*server.sampleRate);
 			snd=PlayBuf.ar(2,buf1,rate,t_trig,startPos:startPos*frames1,doneAction:2);
 			snd=snd*EnvGen.ar(Env.adsr(attack,decay,sustain,release),gate,doneAction:2);
 			DetectSilence.ar(snd,0.001,doneAction:2);
-			snd=Balance2.ar(snd[0],snd[1],pan,amp);
+			snd=snd*EnvGen.ar(Env.linen(0.01,duration/2,duration/2-0.01),gate,doneAction:2);
+			snd=Balance2.ar(snd[0],snd[1],pan,amp);			
 			Out.ar(out,snd);
 		}).send(server);
 	}
